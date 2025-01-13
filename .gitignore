@@ -1,0 +1,39 @@
+build/
+dist/
+lib/
+licenses/
+node/
+node_modules/
+site/
+spec/
+target/
+
+.env
+
+# IDEs
+.project
+.settings/
+.vscode/
+
+# Yarn v3 (non zero-installs)
+# See: https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Debugging output file for webpack
+__webpackConfig__.txt
+
+# snyk
+.dccache
+
+**/node_modules
+**/dist
+**/.DS_Store
+.devcontainer/dev.env
+integration-tests/videos
+integration-tests/screenshots
