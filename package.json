@@ -9,7 +9,7 @@
     "url": "https://github.com/hawtio/hawtio-online.git"
   },
   "scripts": {
-    "start": "yarn webpack serve --progress --profile --json=compilation-stats.json",
+    "start": "yarn clean && yarn webpack serve --progress --profile --json=compilation-stats.json",
     "start-console": "./bin/start-console.sh",
     "build": "yarn clean && NODE_ENV=production yarn webpack",
     "build-dev": "yarn clean && yarn webpack",

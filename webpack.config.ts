@@ -56,39 +56,6 @@ module.exports = (wp) => {
       ]
     },
     plugins: [
-      new webpack.container.ModuleFederationPlugin({
-        exposes: {},
-        shared: {
-          ...devDependencies,
-          react: {
-            singleton: true,
-            requiredVersion: devDependencies['react'],
-          },
-          'react-dom': {
-            singleton: true,
-            requiredVersion: devDependencies['react-dom'],
-          },
-          'react-router-dom': {
-            singleton: true,
-            requiredVersion: devDependencies['react-router-dom'],
-          }
-        }
-      }),
-      new class OutputMonitor {
-        apply(compiler) {
-          compiler.hooks.thisCompilation.tap('ConsoleRemotePlugin', compilation => {
-            //console.dir(compilation, { depth: null })
-
-            if (compilation instanceof webpack.Compilation) {
-              console.log("compilation is GOOD!!")
-            } else {
-              console.log("compilation is BAD!!")
-            }
-
-            console.log('webpack version: ' + webpack.version)
-          });
-        }
-      },
       new ConsoleRemotePlugin({
         validateSharedModules: true,
         pluginMetadata: {
