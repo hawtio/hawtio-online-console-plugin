@@ -25,5 +25,20 @@
       "perspective": "admin",
       "name": "Examples"
     }
+  },
+  {
+    "type": "console.tab/horizontalNav",
+    "properties": {
+      "page": {
+        "name": "HawtIO",
+        "href": "hawtio"
+      },
+      "model": {
+        "group": "core",
+        "version": "v1",
+        "kind": "Pod"
+      },
+      "component": { "$codeRef": "HawtioMainTab" }
+    }
   }
 ]

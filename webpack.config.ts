@@ -90,14 +90,15 @@ module.exports = (wp) => {
         }
       },
       new ConsoleRemotePlugin({
-        validateSharedModules: false,
+        validateSharedModules: true,
         pluginMetadata: {
           name: "hawtio-online-console-plugin",
           version: "2.2.0",
           displayName: "HawtIO OpenShift Console Plugin",
           description: "HawtIO Plugin serving integrated UI in OpenShift Console.",
           exposedModules: {
-            ExamplePage: "./components/ExamplePage"
+            ExamplePage: "./components/ExamplePage",
+            HawtioMainTab: "./components/HawtioMainTab"
           },
           dependencies: {
             "@console/pluginAPI": "*"
