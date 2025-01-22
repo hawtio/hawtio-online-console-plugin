@@ -1,0 +1,14 @@
+#hawtio-main-page {
+  height:auto !important;
+  max-height: none !important;
+}
+
+.hawtio-camel-split {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 85px);
+}
+
+#hawtio-plugin-toolbar a {
+  text-decoration: none;
+}
