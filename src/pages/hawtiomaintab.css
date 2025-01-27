@@ -1,14 +1,14 @@
-#hawtio-main-page {
+#hawtio-main-page,
+.camel-split,
+.jmx-split {
   height:auto !important;
   max-height: none !important;
 }
 
-.hawtio-camel-split {
-  display: flex;
-  flex-direction: row;
-  height: calc(100vh - 85px);
+#attribute-table-with-panel {
+  height: auto !important;
 }
 
-#hawtio-plugin-toolbar a {
-  text-decoration: none;
+.react-flow__node-camel .camel-node-content {
+  background-color: #656565 !important;
 }

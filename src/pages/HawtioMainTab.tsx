@@ -9,6 +9,7 @@ import { Alert, Card, CardBody, PageSection, PageSectionVariants } from "@patter
 import { K8sPod } from "../types"
 import { hawtioService } from "../hawtio-service"
 import { HawtioLoadingPage, Hawtio } from "@hawtio/react"
+import '@hawtio/react/dist/index.css'
 import { connectionService } from "../connection-service"
 import { stack } from "../utils"
 import './hawtiomaintab.css'

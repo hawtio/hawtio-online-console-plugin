@@ -22,7 +22,7 @@ const isProd = process.env.NODE_ENV === 'production'
 // If this is to be changed then also need to change the same value
 // in the public/hawtconfig.json file
 //
-const publicPath = '/online'
+const publicPath = '/hawtio'
 
 
 module.exports = (env, argv) => {
