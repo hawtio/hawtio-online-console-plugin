@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: plugin-serving-cert
+  name: hawtio-online-console-plugin
+  labels:
+    app: hawtio-online-console-plugin
+    app.kubernetes.io/component: hawtio-online-console-plugin
+    app.kubernetes.io/instance: hawtio-online-console-plugin
+    app.kubernetes.io/part-of: hawtio-online-console-plugin
+spec:
+  ports:
+    - name: 9443-tcp
+      protocol: TCP
+      port: 9443
+      targetPort: 9443
+  selector:
+    app: hawtio-online-console-plugin
+  type: ClusterIP
+  sessionAffinity: None
