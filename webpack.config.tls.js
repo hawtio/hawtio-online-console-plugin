@@ -156,7 +156,8 @@ module.exports = (env, argv) => {
 
     devServer: {
       liveReload: true,
-      port: 9001,
+      port: 9444,
+      server: 'https',
 
       static: [
         './dist',
