@@ -18,15 +18,9 @@
     "lint:fix": "yarn eslint src/ --fix",
     "format:check": "yarn prettier --check src/",
     "format:fix": "yarn prettier --write src/",
-    "i18n": "./i18n-scripts/build-i18n.sh && node ./i18n-scripts/set-english-defaults.js",
-    "test-cypress": "cd integration-tests && cypress open",
-    "test-cypress-headless": "cd integration-tests && node --max-old-space-size=4096 ../node_modules/.bin/cypress run --browser ${BRIDGE_E2E_BROWSER_NAME:=electron}",
-    "cypress-merge": "mochawesome-merge ./integration-tests/screenshots/cypress_report*.json > ./integration-tests/screenshots/cypress.json",
-    "cypress-generate": "marge -o ./integration-tests/screenshots/ -f cypress-report -t 'OpenShift Console Plugin Template Cypress Test Results' -p 'OpenShift Cypress Plugin Template Test Results' --showPassed false --assetsDir ./integration-tests/screenshots/cypress/assets ./integration-tests/screenshots/cypress.json",
-    "cypress-postreport": "yarn cypress-merge && yarn cypress-generate"
+    "i18n": "./i18n-scripts/build-i18n.sh && node ./i18n-scripts/set-english-defaults.js"
   },
   "devDependencies": {
-    "@cypress/webpack-preprocessor": "^5.15.5",
     "@eslint/compat": "^1.2.0",
     "@eslint/js": "^9.12.0",
     "@hawtio/react": "1.9.0-r17-virtualrouter-alpha4",
@@ -44,8 +38,6 @@
     "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^6.4.1",
     "css-loader": "^6.7.1",
-    "cypress": "^12.17.4",
-    "cypress-multi-reporters": "^1.6.2",
     "cz-conventional-changelog": "3.3.0",
     "dotenv-webpack": "^8.1.0",
     "eslint": "^9.1.0",
