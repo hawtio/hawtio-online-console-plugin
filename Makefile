@@ -327,6 +327,21 @@ image-push: container-builder
 
 #---
 #
+#@ generate-proxying
+#
+#== Generate a client certificate and TLS secret for Hawtio proxying on Openshift
+#
+#=== Calls check-admin
+#
+#* PARAMETERS:
+#** NAMESPACE:               Set the namespace for the secret
+#
+#---
+generate-proxying: check-admin
+	NAMESPACE=$(NAMESPACE) ./scripts/generate-proxying.sh
+
+#---
+#
 #@ install
 #
 #== Install the deployment into the cluster
@@ -335,6 +350,7 @@ image-push: container-builder
 #=== Calls kubectl
 #=== Calls jq
 #=== Calls http-only
+#=== Calls generate-proxying
 #
 #* PARAMETERS:
 #** HTTP_ONLY:               Set the install to be non-ssl / tls
@@ -359,6 +375,7 @@ ifeq ($(DRY_RUN), true)
 	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(DEPLOY_DIR) | \
 		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
 else
+	@$(MAKE) -s generate-proxying
 	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(DEPLOY_DIR) | \
 		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
 		$(KUBECTL) apply -f -
