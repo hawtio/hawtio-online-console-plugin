@@ -1,0 +1,35 @@
+FROM docker.io/node:20-alpine as builder
+
+#
+# The plugin name
+#
+ENV PLUGIN_NAME hawtio-online-console-plugin
+ENV PACKAGE_PLUGIN packages/plugin
+
+WORKDIR /${PLUGIN_NAME}
+
+COPY .yarn/plugins .yarn/plugins
+COPY .yarn/releases .yarn/releases
+COPY .yarnrc.yml ./
+COPY Makefile Makefile
+COPY yarn.lock yarn.lock
+COPY ${PACKAGE_PLUGIN}/locales locales
+COPY ${PACKAGE_PLUGIN}/public public
+COPY ${PACKAGE_PLUGIN}/src src
+COPY ${PACKAGE_PLUGIN}/console-extensions.json console-extensions.json
+COPY ${PACKAGE_PLUGIN}/package.json package.json
+COPY ${PACKAGE_PLUGIN}/tsconfig.json tsconfig.json
+COPY ${PACKAGE_PLUGIN}/webpack.config.common.js webpack.config.common.js
+COPY ${PACKAGE_PLUGIN}/webpack.config.prod.js webpack.config.prod.js
+
+RUN command -v yarn || npm i -g yarn
+
+USER root
+
+## Install dependencies
+RUN yarn install
+
+## Build application
+RUN yarn build
+
+### END BUILD STAGE ###
