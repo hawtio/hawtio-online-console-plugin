@@ -52,6 +52,8 @@ DEPLOY := deploy
 BASE := base
 PATCHES := patches
 PLACEHOLDER := placeholder
+GATEWAY := gateway
+PLUGIN := plugin
 
 #
 # =======================
@@ -365,6 +367,85 @@ generate-proxying: check-admin
 
 #---
 #
+#@ install-gateway
+#
+#== Install the gateway service into the cluster
+#
+#=== Calls kustomize
+#=== Calls kubectl
+#=== Calls jq
+#=== Calls generate-proxying
+#
+#* PARAMETERS:
+#** NAMESPACE:               Set the namespace for the resources
+#** CUSTOM_GATEWAY_IMAGE:    Set a custom gateway image to install from
+#** CUSTOM_GATEWAY_VERSION:  Set a custom gateway version to install from
+#** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
+#
+#---
+install-gateway: kustomize kubectl jq
+# Set the namespace in the setup kustomization yaml
+	@$(call set-kustomize-namespace,$(BASE)/$(GATEWAY))
+# Set the image references of the kustomization
+	@$(call set-kustomize-gateway-image,$(BASE)/$(GATEWAY))
+#
+# Build the resources
+# Either apply to the cluster or output to CLI
+# Post-processes any remaining 'placeholder'
+# that may remain, eg. in rolebindings
+#
+ifeq ($(DRY_RUN), true)
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(GATEWAY) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
+else
+	@$(MAKE) -s generate-proxying
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(GATEWAY) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
+		$(KUBECTL) apply -f -
+endif
+
+#---
+#
+#@ install-plugin
+#
+#== Install the plugin deployment into the cluster
+#
+#=== Calls kustomize
+#=== Calls kubectl
+#=== Calls jq
+#=== Calls generate-proxying
+#
+#* PARAMETERS:
+#** NAMESPACE:               Set the namespace for the resources
+#** CUSTOM_PLUGIN_IMAGE:     Set a custom plugin image to install from
+#** CUSTOM_PLUGIN_VERSION:   Set a custom plugin version to install from
+#** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
+#
+#---
+install-plugin: kustomize kubectl jq
+# Set the namespace in the setup kustomization yaml
+	@$(call set-kustomize-namespace,$(BASE)/$(PLUGIN))
+# Set the image references of the kustomization
+	@$(call set-kustomize-plugin-image,$(BASE)/$(PLUGIN))
+#
+# Build the resources
+# Either apply to the cluster or output to CLI
+# Post-processes any remaining 'placeholder'
+# that may remain, eg. in rolebindings
+#
+ifeq ($(DRY_RUN), true)
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(PLUGIN) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
+else
+	@$(MAKE) -s generate-proxying
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(PLUGIN) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
+		$(KUBECTL) apply -f -
+	./scripts/patch-console.sh $(PLUGIN)
+endif
+
+#---
+#
 #@ install
 #
 #== Install the deployment into the cluster
@@ -383,28 +464,7 @@ generate-proxying: check-admin
 #** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
 #
 #---
-install: kustomize kubectl jq
-# Set the namespace in the setup kustomization yaml
-	@$(call set-kustomize-namespace,$(BASE))
-# Set the image references of the kustomization
-	@$(call set-kustomize-plugin-image,$(BASE))
-	@$(call set-kustomize-gateway-image,$(BASE))
-#
-# Build the resources
-# Either apply to the cluster or output to CLI
-# Post-processes any remaining 'placeholder'
-# that may remain, eg. in rolebindings
-#
-ifeq ($(DRY_RUN), true)
-	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE) | \
-		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
-else
-	@$(MAKE) -s generate-proxying
-	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE) | \
-		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
-		$(KUBECTL) apply -f -
-	./scripts/patch-console.sh $(PLUGIN)
-endif
+install: kustomize kubectl jq install-gateway install-plugin
 
 #---
 #
@@ -437,4 +497,4 @@ help: ## Show this help screen.
 .DEFAULT_GOAL := help
 default: help
 
-.PHONY: generate-proxying install uninstall help
+.PHONY: generate-proxying install-gateway install-plugin install uninstall help
