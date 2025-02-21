@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "build": "yarn build:plugin && yarn build:gateway && yarn license",
-    "start:plugin": "yarn workspace @hawtio/online-console-plugin start",
+    "start:plugin": "yarn workspace @hawtio/online-console-plugin start:plugin",
+    "start:console": "yarn workspace @hawtio/online-console-plugin start:console",
     "build:plugin": "yarn workspace @hawtio/online-console-plugin build",
     "start:gateway": "yarn workspace @hawtio/online-plugin-gateway start",
     "build:gateway": "yarn workspace @hawtio/online-plugin-gateway build",

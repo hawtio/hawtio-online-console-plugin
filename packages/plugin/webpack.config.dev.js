@@ -5,6 +5,7 @@ const dotenv = require('dotenv')
 const path = require('path')
 const express = require('express')
 const { common } = require('./webpack.config.common.js')
+const { devDependencies } = require('./package.json')
 
 // this will update the process.env with environment variables in .env file
 dotenv.config({ path: path.join(__dirname, '.env') })
@@ -50,7 +51,15 @@ module.exports = (env, argv) => {
 
     devServer: {
       liveReload: true,
-      port: 9001,
+      port: 9444,
+      server: {
+        type: 'https',
+        options: {
+          ca: './tls-certificates/certificate-authority.crt',
+          key: './tls-certificates/server.localhost.key',
+          cert: './tls-certificates/server.localhost.crt'
+        },
+      },
 
       static: [
         './dist',
