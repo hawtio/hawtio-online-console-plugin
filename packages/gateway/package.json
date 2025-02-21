@@ -17,14 +17,14 @@
     "OpenShift"
   ],
   "scripts": {
-    "start:gateway": "yarn start:gateway-dev && yarn start:gateway-server",
-    "start:gateway-dev": "node --env-file .env.development proxy-dev-server.js",
-    "start:gateway-server": "tsup --config tsup.config.dev.ts --watch",
-    "build": "webpack --mode production --progress --config webpack.config.prod.js",
+    "start": "yarn cert-gen && yarn server",
+    "server": "tsup --config tsup.config.dev.ts --watch",
+    "cert-gen": "cd tls-certificates && ./generate-dev-certs.sh",
+    "build": "webpack --mode production --progress --config webpack.config.js",
     "test": "yarn create-test-certs && jest --detectOpenHandles",
     "test:watch": "yarn create-test-certs && jest --detectOpenHandles --watch",
     "test:coverage": "yarn create-test-certs && jest --coverage",
-    "create-test-certs": "cd test-tls && ./create-cert.sh && cd .."
+    "create-test-certs": "cd test-tls && ./create-cert.sh"
   },
   "dependencies": {
     "cors": "^2.8.5",

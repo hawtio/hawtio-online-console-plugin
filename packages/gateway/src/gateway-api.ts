@@ -6,7 +6,7 @@ import cors from 'cors'
 import * as fs from 'fs'
 import * as https from 'https'
 import { logger, expressLogger } from './logger'
-import { proxyJolokiaAgent, SSLOptions } from './jolokia-agent'
+import { getClusterAddr, proxyJolokiaAgent, setClusterAddr, SSLOptions } from './jolokia-agent'
 
 const environment = process.env.NODE_ENV || 'development'
 
@@ -15,6 +15,16 @@ const environment = process.env.NODE_ENV || 'development'
  * - Can be overriden by env var in deployment resource
  */
 const port = process.env.HAWTIO_ONLINE_GATEWAY_APP_PORT || 3000
+
+/*
+ * In development when gateway is a local server rather than inside
+ * the cluster address needs to be overwritten since the default will
+ * not be available outside of the cluster.
+ */
+const clusterAddress = process.env.CLUSTER_ADDRESS || ''
+if (clusterAddress.length > 0) {
+  setClusterAddr(clusterAddress)
+}
 
 /*
  * All specified in deployment resource
@@ -58,6 +68,7 @@ logger.info(`* App Port:          ${port}`)
 logger.info(`* Log Level:         ${logger.level}`)
 logger.info(`* SSL Enabled:       ${sslCertificate !== ''}`)
 logger.info(`* Proxy SSL Enabled: ${sslProxyCertificate !== ''}`)
+logger.info(`* Cluster Address:   ${getClusterAddr()}`)
 logger.info(`* RBAC:              ${process.env['HAWTIO_ONLINE_RBAC_ACL'] || 'default'}`)
 logger.info('**************************************')
 

@@ -16,6 +16,7 @@
     "build": "yarn build:plugin && yarn build:gateway && yarn license",
     "start:plugin": "yarn workspace @hawtio/online-console-plugin start",
     "build:plugin": "yarn workspace @hawtio/online-console-plugin build",
+    "start:gateway": "yarn workspace @hawtio/online-plugin-gateway start",
     "build:gateway": "yarn workspace @hawtio/online-plugin-gateway build",
     "lint": "yarn eslint packages/",
     "lint:fix": "yarn eslint packages/ --fix",

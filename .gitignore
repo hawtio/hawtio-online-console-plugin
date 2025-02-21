@@ -37,3 +37,7 @@ __webpackConfig__.txt
 .devcontainer/dev.env
 integration-tests/videos
 integration-tests/screenshots
+
+tls-certificates/*.crt
+tls-certificates/*.key
+tls-certificates/*.srl
