@@ -44,7 +44,6 @@ const common = (mode, publicPath, env) => {
           test: /\.(sa|sc|c)ss$/,
           use: [ 'style-loader', 'css-loader', 'sass-loader' ],
           include: [ /node_modules/, /\.css$/ ],
-          sideEffects: false
         },
         {
           test: /\.(svg|woff2?|ttf|eot|otf)(\?.*$|$)/,
