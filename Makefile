@@ -54,6 +54,7 @@ PATCHES := patches
 PLACEHOLDER := placeholder
 GATEWAY := gateway
 PLUGIN := plugin
+GATEWAY_ROUTE := gateway-route
 
 #
 # =======================
@@ -406,6 +407,45 @@ endif
 
 #---
 #
+#@ install-gateway-route
+#
+#== Install the gateway service into the cluster and a route for external access
+#
+#=== Calls kustomize
+#=== Calls kubectl
+#=== Calls jq
+#=== Calls generate-proxying
+#
+#* PARAMETERS:
+#** NAMESPACE:               Set the namespace for the resources
+#** CUSTOM_GATEWAY_IMAGE:    Set a custom gateway image to install from
+#** CUSTOM_GATEWAY_VERSION:  Set a custom gateway version to install from
+#** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
+#
+#---
+install-gateway-route: kustomize kubectl jq install-gateway
+# Set the namespace in the setup kustomization yaml
+	@$(call set-kustomize-namespace,$(GATEWAY_ROUTE))
+# Set the image references of the kustomization
+	@$(call set-kustomize-gateway-image,$(GATEWAY_ROUTE))
+#
+# Build the resources
+# Either apply to the cluster or output to CLI
+# Post-processes any remaining 'placeholder'
+# that may remain, eg. in rolebindings
+#
+ifeq ($(DRY_RUN), true)
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(GATEWAY_ROUTE) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
+else
+	@$(MAKE) -s generate-proxying
+	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(GATEWAY_ROUTE) | \
+		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
+		$(KUBECTL) apply -f -
+endif
+
+#---
+#
 #@ install-plugin
 #
 #== Install the plugin deployment into the cluster
@@ -497,4 +537,4 @@ help: ## Show this help screen.
 .DEFAULT_GOAL := help
 default: help
 
-.PHONY: generate-proxying install-gateway install-plugin install uninstall help
+.PHONY: generate-proxying install-gateway install-gateway-route install-plugin install uninstall help

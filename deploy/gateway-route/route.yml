@@ -1,0 +1,21 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hawtio-online-console-plugin-gateway
+  namespace: placeholder
+  labels:
+    app: hawtio-online-console-plugin-gateway
+    app.kubernetes.io/component: hawtio-online-console-plugin-gateway
+    app.kubernetes.io/instance: hawtio-online-console-plugin-gateway
+    app.kubernetes.io/part-of: hawtio-online-console-plugin
+spec:
+  to:
+    kind: Service
+    name: hawtio-online-console-plugin-gateway
+    weight: 100
+  port:
+    targetPort: 8443-tcp
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
