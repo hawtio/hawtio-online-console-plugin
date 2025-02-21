@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 CONSOLE_IMAGE=${CONSOLE_IMAGE:="quay.io/openshift/origin-console:latest"}
 CONSOLE_PORT=${CONSOLE_PORT:=9442}
 CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
@@ -9,7 +7,9 @@ CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
 # Plugin metadata is declared in package.json
 PLUGIN_NAME="hawtio-online-console-plugin"
 GATEWAY_SERVICE="gateway"
-PLUGIN_GATEWAY_HOST=$(oc get route hawtio-online-console-plugin-gateway -o jsonpath='{.spec.host}' 2>/dev/null)
+PLUGIN_GATEWAY_HOST=$(oc get route hawtio-online-console-plugin-gateway -o jsonpath='{.spec.host}')
+
+set -euo pipefail
 
 echo "Starting local OpenShift console in https mode..."
 echo "Plugin Name: ${PLUGIN_NAME}"
