@@ -9,7 +9,7 @@ COPY .yarnrc.yml ./
 COPY .yarn/plugins .yarn/plugins
 COPY .yarn/releases .yarn/releases
 COPY ${PACKAGE_GATEWAY}/package.json ./
-COPY ${PACKAGE_GATEWAY}/webpack.config.prod.js ./
+COPY ${PACKAGE_GATEWAY}/webpack.config.js ./
 COPY ${PACKAGE_GATEWAY}/tsconfig.json ./
 COPY ${PACKAGE_GATEWAY}/src ./src/
 COPY ${PACKAGE_GATEWAY}/public ./public/
