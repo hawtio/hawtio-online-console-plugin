@@ -84,7 +84,7 @@ class HawtioService {
        * Initializing not previously attempted
        */
       await userService.fetchUser()
-      configManager.addProductInfo('Hawtio Online', HAWTIO_ONLINE_VERSION)
+      configManager.addProductInfo('Hawtio Online (Plugin)', HAWTIO_ONLINE_VERSION)
       hawtio.setBasePath(fetchPatchService.getBasePath())
     }
 
