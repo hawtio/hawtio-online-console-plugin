@@ -94,11 +94,11 @@ export class SimpleResponse {
   constructor(
     public status: number,
     public body: string,
-    private _headers?: Headers
+    private _headers?: Headers,
   ) {}
 
   get headers() {
-    return ! this._headers ? new Headers() : this._headers
+    return !this._headers ? new Headers() : this._headers
   }
 
   get ok() {

@@ -1,5 +1,4 @@
 const webpack = require('webpack')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const InterpolateHtmlPlugin = require('interpolate-html-plugin')
 const { ConsoleRemotePlugin } = require('@openshift-console/dynamic-plugin-sdk-webpack')
@@ -18,7 +17,6 @@ const common = (mode, publicPath, env) => {
   console.log(`Package Version: ${packageVersion}`)
 
   return {
-
     context: path.resolve(__dirname, 'src'),
 
     // No regular entry points needed.
@@ -42,15 +40,15 @@ const common = (mode, publicPath, env) => {
         },
         {
           test: /\.(sa|sc|c)ss$/,
-          use: [ 'style-loader', 'css-loader', 'sass-loader' ],
-          include: [ /node_modules/, /\.css$/ ],
+          use: ['style-loader', 'css-loader', 'sass-loader'],
+          include: [/node_modules/, /\.css$/],
         },
         {
           test: /\.(svg|woff2?|ttf|eot|otf)(\?.*$|$)/,
           type: 'asset/resource',
           // only process modules with this loader
           // if they live under a 'fonts' or 'pficon' directory
-          include: [ /node_modules/ ],
+          include: [/node_modules/],
           generator: {
             filename: mode === 'production' ? 'assets/[contenthash][ext]' : 'assets/[name][ext]',
           },
@@ -58,7 +56,7 @@ const common = (mode, publicPath, env) => {
         {
           test: /\.svg$/,
           type: 'asset/inline',
-          include: (input) => input.indexOf('background-filter.svg') > 1,
+          include: input => input.indexOf('background-filter.svg') > 1,
           use: [
             {
               options: {
@@ -71,7 +69,7 @@ const common = (mode, publicPath, env) => {
         },
         {
           test: /\.(jpg|jpeg|png|gif)$/i,
-          include: [ /node_modules/ ],
+          include: [/node_modules/],
           type: 'asset/inline',
           use: [
             {
@@ -89,7 +87,7 @@ const common = (mode, publicPath, env) => {
             fullySpecified: false,
           },
         },
-      ]
+      ],
     },
     plugins: [
       new ConsoleRemotePlugin({
@@ -97,20 +95,16 @@ const common = (mode, publicPath, env) => {
         pluginMetadata: {
           name: pluginName,
           version: packageVersion,
-          displayName: "HawtIO OpenShift Console Plugin",
-          description: "HawtIO Plugin serving integrated UI in OpenShift Console.",
+          displayName: 'HawtIO OpenShift Console Plugin',
+          description: 'HawtIO Plugin serving integrated UI in OpenShift Console.',
           exposedModules: {
-            ExamplePage: "./pages/ExamplePage",
-            HawtioMainTab: "./pages/HawtioMainTab",
-            HawtioMainPrefs: "./pages/HawtioMainPrefs"
+            HawtioMainTab: './pages/HawtioMainTab',
+            HawtioMainPrefs: './pages/HawtioMainPrefs',
           },
           dependencies: {
-            "@console/pluginAPI": "*"
-          }
-        }
-      }),
-      new CopyWebpackPlugin({
-        patterns: [{ from: path.resolve(__dirname, 'locales'), to: 'locales' }],
+            '@console/pluginAPI': '*',
+          },
+        },
       }),
       new HtmlWebpackPlugin({
         inject: true,
@@ -142,8 +136,8 @@ const common = (mode, publicPath, env) => {
         }),
       ],
       fallback: {
-        http: require.resolve("stream-http"),
-        url: require.resolve("url"),
+        http: require.resolve('stream-http'),
+        url: require.resolve('url'),
       },
       symlinks: false,
       cacheWithContext: false,
@@ -153,7 +147,7 @@ const common = (mode, publicPath, env) => {
       // For suppressing sourcemap warnings coming from some dependencies
       /Failed to parse source map/,
       /Critical dependency: the request of a dependency is an expression/,
-    ]
+    ],
   }
 }
 

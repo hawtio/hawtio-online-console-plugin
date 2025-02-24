@@ -57,7 +57,7 @@ checkEnvVar(sslProxyCertificate, 'SSL Proxy Certifcate')
 const sslOptions: SSLOptions = {
   certCA: fs.readFileSync(sslCertificateCA),
   proxyKey: fs.readFileSync(sslProxyKey),
-  proxyCert: fs.readFileSync(sslProxyCertificate)
+  proxyCert: fs.readFileSync(sslProxyCertificate),
 }
 
 export const gatewayServer = express()
@@ -80,11 +80,11 @@ gatewayServer.use(expressLogger)
  *
  * - Sets X-Frame-Options: "SAMEORIGIN"
  */
-gatewayServer.use(helmet(
-  {
+gatewayServer.use(
+  helmet({
     strictTransportSecurity: {
       maxAge: 31536000,
-      includeSubDomains: true
+      includeSubDomains: true,
     },
     contentSecurityPolicy: {
       directives: {
@@ -93,13 +93,15 @@ gatewayServer.use(helmet(
         'form-action': 'self',
       },
     },
-  }
-))
+  }),
+)
 
 // Cross Origin Support
-gatewayServer.use(cors({
-  credentials: true,
-}))
+gatewayServer.use(
+  cors({
+    credentials: true,
+  }),
+)
 
 // override with the X-HTTP-Method-Override header in the request. simulate DELETE/PUT
 gatewayServer.use(methodOverride('X-HTTP-Method-Override'))
@@ -110,7 +112,7 @@ gatewayServer.use(methodOverride('X-HTTP-Method-Override'))
  */
 gatewayServer.route('/status').get((req, res) => {
   res.setHeader('Content-Type', 'application/json')
-  res.status(200).json({ port: port, loglevel: logger.level})
+  res.status(200).json({ port: port, loglevel: logger.level })
 })
 
 /**

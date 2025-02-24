@@ -8,14 +8,12 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = (env, argv) => {
-
   //
   // Prefix path will be determined by the installed web server platform
   //
   const publicPath = '/'
 
   return merge(common('production', publicPath, env), {
-
     devtool: 'source-map',
 
     stats: {
@@ -30,15 +28,15 @@ module.exports = (env, argv) => {
       sideEffects: false,
       minimizer: [
         new TerserPlugin({
-          exclude: [ /\.css/, /\.scss/ ],
+          exclude: [/\.css/, /\.scss/],
         }),
       ],
     },
 
     plugins: [
       new CopyWebpackPlugin({
-        patterns: [ { from: path.resolve(__dirname, 'public', 'hawtio-logo.svg'), to: 'hawtio-logo.svg' }],
-      })
-    ]
+        patterns: [{ from: path.resolve(__dirname, 'public', 'hawtio-logo.svg'), to: 'hawtio-logo.svg' }],
+      }),
+    ],
   })
 }

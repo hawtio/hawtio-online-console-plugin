@@ -58,7 +58,7 @@ export function maskIPAddresses(obj: string | object): string {
   if (isObject(obj)) jsonStr = JSON.stringify(obj)
   else jsonStr = obj
 
-  return (!jsonStr || jsonStr.length === 0) ? jsonStr : jsonStr.replaceAll(ipPattern, '<masked>')
+  return !jsonStr || jsonStr.length === 0 ? jsonStr : jsonStr.replaceAll(ipPattern, '<masked>')
 }
 
 /**

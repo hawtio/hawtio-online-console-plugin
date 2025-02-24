@@ -6,7 +6,7 @@
 #hawtio-main-page,
 .camel-split,
 .jmx-split {
-  height:auto !important;
+  height: auto !important;
   max-height: none !important;
 }
 

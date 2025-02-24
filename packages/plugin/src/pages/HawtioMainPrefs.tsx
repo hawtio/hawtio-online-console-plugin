@@ -3,22 +3,33 @@
  * its constructor sets up the interceptor before importing hawtio
  * so do not move this down the import list below @hawtio/react
  */
-import { fetchPatchService } from "../fetch-patch-service"
-import React, { useEffect, useState } from "react"
-import { hawtioService } from "../hawtio-service"
-import { HawtioLoadingPage, preferencesRegistry } from "@hawtio/react"
+import { fetchPatchService } from '../fetch-patch-service'
+import React, { useEffect, useState } from 'react'
+import { hawtioService } from '../hawtio-service'
+import { HawtioLoadingPage, preferencesRegistry } from '@hawtio/react'
 import '@hawtio/react/dist/index.css'
 import { log } from '../globals'
-import { Alert, Card, CardBody, Divider, Nav, NavItem, NavList, Page, PageSection, PageSectionVariants } from "@patternfly/react-core"
+import {
+  Alert,
+  Card,
+  CardBody,
+  Divider,
+  Nav,
+  NavItem,
+  NavList,
+  Page,
+  PageSection,
+  PageSectionVariants,
+} from '@patternfly/react-core'
 import '@patternfly/patternfly/patternfly.css'
-import { stack } from "../utils"
+import { stack } from '../utils'
 import './hawtiomainprefs.css'
 
 interface HawtioMainPrefsProps {
   id: string
 }
 
-export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (props) => {
+export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = props => {
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>()
   const [prefsPageId, setPrefsPageId] = useState<string>('')
@@ -41,14 +52,13 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
          * since their is no pod attached to the preferences
          * However, the preferences will have been added to registry
          */
-        if (! hawtioService.isInitialized()) {
+        if (!hawtioService.isInitialized()) {
           setError(new Error('Failure to initialize the HawtioService', { cause: hawtioService.getError() }))
           setLoading(false) // error occurred so loading is done
           return
         }
 
-        if (preferencesRegistry.getPreferences().length > 0)
-          setPrefsPageId(preferencesRegistry.getPreferences()[0].id)
+        if (preferencesRegistry.getPreferences().length > 0) setPrefsPageId(preferencesRegistry.getPreferences()[0].id)
 
         setLoading(false)
       }
@@ -58,9 +68,7 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
   }, [isLoading])
 
   if (isLoading) {
-    return (
-      <HawtioLoadingPage/>
-    )
+    return <HawtioLoadingPage />
   }
 
   if (error) {
@@ -69,7 +77,10 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
         <Card>
           <CardBody>
             <Alert variant='danger' title='Error occurred while loading'>
-              <textarea readOnly style={{ width: '100%', height: '100%', resize: 'none', background: 'transparent', border: 'none' }}>
+              <textarea
+                readOnly
+                style={{ width: '100%', height: '100%', resize: 'none', background: 'transparent', border: 'none' }}
+              >
                 {stack(error)}
               </textarea>
             </Alert>
@@ -79,12 +90,12 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
     )
   }
 
-  const onPreferencePageClick = (itemId: string|number) => {
+  const onPreferencePageClick = (itemId: string | number) => {
     setPrefsPageId(itemId.toString())
   }
 
   return (
-    <Page id="hawtio-preferences">
+    <Page id='hawtio-preferences'>
       <PageSection type='tabs' hasShadowBottom>
         <Nav aria-label='Nav' variant='tertiary'>
           <NavList>
@@ -93,7 +104,7 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
                 key={prefs.id}
                 itemId={prefs.id}
                 isActive={prefsPageId === prefs.id}
-                onClick={(event, itemId: string|number) => {
+                onClick={(event, itemId: string | number) => {
                   onPreferencePageClick(itemId)
                 }}
               >
@@ -105,15 +116,14 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = (p
       </PageSection>
       <Divider />
       <PageSection variant={PageSectionVariants.dark}>
-        {
-          preferencesRegistry.getPreferences()
-            .filter(prefs => {
-              console.log('Testing prefs ' + prefs.id)
-              console.log('Result: ' + (prefs.id === prefsPageId))
-              return prefs.id === prefsPageId
-            })
-            .map(prefs => { return React.createElement(prefs.component)})
-        }
+        {preferencesRegistry
+          .getPreferences()
+          .filter(prefs => {
+            return prefs.id === prefsPageId
+          })
+          .map(prefs => {
+            return React.createElement(prefs.component)
+          })}
       </PageSection>
     </Page>
   )

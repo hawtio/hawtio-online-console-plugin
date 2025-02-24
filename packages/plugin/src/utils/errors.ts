@@ -24,10 +24,9 @@ export function stack(error: Error): string {
 }
 
 export class HTTPError extends Error {
-
   statusCode: number
 
-  constructor(code: number, message: string, extras?: Object) {
+  constructor(code: number, message: string, extras?: object) {
     super(message || STATUS_CODES[code])
 
     if (arguments.length >= 3 && extras) {
@@ -41,22 +40,20 @@ export class HTTPError extends Error {
   private upperCamelCase(str: string) {
     // Using replace method with regEx
     return str
-      .replace(
-        /(?:^\w|[A-Z]|\b\w)/g,
-        (word) => {
-          return word.toUpperCase()
-        })
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, word => {
+        return word.toUpperCase()
+      })
       .replace(/\s+/g, '')
   }
 
   /**
-  * Converts an HTTP status code to an Error `name`.
-  * Ex:
-  *   302 => "Found"
-  *   404 => "NotFoundError"
-  *   500 => "InternalServerError"
-  */
-  private toName (code: number) {
+   * Converts an HTTP status code to an Error `name`.
+   * Ex:
+   *   302 => "Found"
+   *   404 => "NotFoundError"
+   *   500 => "InternalServerError"
+   */
+  private toName(code: number) {
     return this.upperCamelCase(String(STATUS_CODES[code]).replace(/error$/i, ''))
   }
 }

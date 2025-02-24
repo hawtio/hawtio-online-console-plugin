@@ -12,10 +12,9 @@ import { log } from './globals'
 import { PROXY_GATEWAY_BASE_PATH } from './constants'
 
 const DEFAULT_JOLOKIA_PORT = 8778
-const JOLOKIA_PORT_QUERY = "$.spec.containers[*].ports[?(@.name==\"jolokia\")]";
+const JOLOKIA_PORT_QUERY = '$.spec.containers[*].ports[?(@.name=="jolokia")]'
 
 class ConnectionService {
-
   podStatus(pod: K8sPod): string {
     // Return results that match
     // https://github.com/openshift/origin/blob/master/vendor/k8s.io/kubernetes/pkg/printers/internalversion/printers.go#L523-L615
@@ -143,8 +142,14 @@ class ConnectionService {
     const jPath = this.getAnnotation(pod, 'hawt.io/jolokiaPath', '/jolokia/')
 
     const path = joinPaths(
-      PROXY_GATEWAY_BASE_PATH, 'management', 'namespaces', namespace,
-      'pods', `${protocol}:${name}:${port}`, jPath)
+      PROXY_GATEWAY_BASE_PATH,
+      'management',
+      'namespaces',
+      namespace,
+      'pods',
+      `${protocol}:${name}:${port}`,
+      jPath,
+    )
     return joinPaths(window.location.origin, path)
   }
 
@@ -192,9 +197,11 @@ class ConnectionService {
   }
 
   private async handleResponse(
-    response: Response, path: string,
+    response: Response,
+    path: string,
     resolve: (value: string) => void,
-    reject: (reason?: any) => void) {
+    reject: (reason?: unknown) => void,
+  ) {
     if (!response.ok) {
       log.debug('Using URL:', path, 'assuming it could be an agent but got return code:', response.status)
 
@@ -205,8 +212,7 @@ class ConnectionService {
     }
 
     try {
-      const result: ParseResult<JolokiaSuccessResponse | JolokiaErrorResponse> =
-        await jolokiaResponseParse(response)
+      const result: ParseResult<JolokiaSuccessResponse | JolokiaErrorResponse> = await jolokiaResponseParse(response)
       if (result.hasError) {
         const err = new HTTPError(500, result.error)
         log.error(err)
@@ -279,7 +285,7 @@ class ConnectionService {
     })
   }
 
-  async connect(pod: K8sPod): Promise<Error|null> {
+  async connect(pod: K8sPod): Promise<Error | null> {
     // Make the pod the current connection
     const connectionId: string = connectionService.deriveConnection(pod)
 
@@ -306,8 +312,7 @@ class ConnectionService {
 
       connectService.setCurrentConnection(connection)
       return null
-    }
-    catch(error) {
+    } catch (error) {
       const msg = `A problem occurred while trying to connect to the jolokia service ${connectionId}`
       log.error(msg)
       log.error(error)

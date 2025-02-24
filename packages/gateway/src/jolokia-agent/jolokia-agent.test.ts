@@ -1,3 +1,5 @@
+/* eslint-disable import/first */
+
 import request from 'supertest'
 import express from 'express'
 import * as fs from 'fs'
@@ -7,7 +9,7 @@ import path from 'path'
 /*
  * Tell testing node environment to allow self-signed certificates
  */
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
 
 /*
  * Uncomment this to enable tracing of
@@ -17,8 +19,12 @@ process.env.LOG_LEVEL = 'trace'
 
 import { expressLogger } from '../logger'
 import {
-  CLUSTER_BASE_ADDRESS, CLUSTER_HOST, CLUSTER_PORT,
-  runningClusterServer, jolokiaUri, testData
+  CLUSTER_BASE_ADDRESS,
+  CLUSTER_HOST,
+  CLUSTER_PORT,
+  runningClusterServer,
+  jolokiaUri,
+  testData,
 } from '../testing'
 import { proxyJolokiaAgent, enableRbac } from './jolokia-agent'
 import { isOptimisedCachedDomains, setClusterAddr, SSLOptions } from './globals'

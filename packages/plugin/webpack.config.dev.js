@@ -11,7 +11,6 @@ const { devDependencies } = require('./package.json')
 dotenv.config({ path: path.join(__dirname, '.env') })
 
 module.exports = (env, argv) => {
-
   //
   // No support for the dev server providing a default router prefix
   // so need to specify here.
@@ -29,10 +28,10 @@ module.exports = (env, argv) => {
       rules: [
         {
           test: /\.js$/,
-          enforce: "pre",
+          enforce: 'pre',
           use: [
             {
-              loader: "source-map-loader",
+              loader: 'source-map-loader',
               options: {
                 filterSourceMappingUrl: (url, resourcePath) => {
                   if (/.*@hawtio\/react.*/i.test(resourcePath)) {
@@ -41,12 +40,12 @@ module.exports = (env, argv) => {
                   }
 
                   return false
-                }
-              }
-            }
-          ]
-        }
-      ]
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
 
     devServer: {
@@ -57,7 +56,7 @@ module.exports = (env, argv) => {
         options: {
           ca: './tls-certificates/certificate-authority.crt',
           key: './tls-certificates/server.localhost.key',
-          cert: './tls-certificates/server.localhost.crt'
+          cert: './tls-certificates/server.localhost.crt',
         },
       },
 
@@ -65,8 +64,8 @@ module.exports = (env, argv) => {
         './dist',
         {
           publicPath: publicPath,
-          directory: path.join(__dirname, 'public')
-        }
+          directory: path.join(__dirname, 'public'),
+        },
       ],
 
       // Allow Bridge running in a container to connect to the plugin dev server.
@@ -117,7 +116,7 @@ module.exports = (env, argv) => {
          */
         const sessionTimeout = (_, res) => {
           const sessionConfig = {
-            timeout: -1
+            timeout: -1,
           }
 
           res.set('Content-Type', 'application/javascript')
@@ -126,8 +125,6 @@ module.exports = (env, argv) => {
 
         /* Fetch the session timeout from the app's own public url path */
         devServer.app.get(`${publicPath}/auth/config/session-timeout`, sessionTimeout)
-
-
 
         return middlewares
       },

@@ -1,8 +1,6 @@
 import * as fetchIntercept from 'fetch-intercept'
 import { PLUGIN_BASE_PATH } from './constants'
 import { getCSRFToken } from './utils/https'
-import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk'
-import { joinPaths } from './utils'
 
 const hawtioFetchPaths = {
   presetConnections: { path: 'preset-connections', regex: /\/\/preset-connections$/ },
@@ -18,7 +16,6 @@ interface Headers {
 }
 
 class FetchPatchService {
-
   private fetchUnregister?: (() => void) | null
 
   private basePath = PLUGIN_BASE_PATH
@@ -30,8 +27,7 @@ class FetchPatchService {
   }
 
   setupFetch() {
-    if (this.fetchUnregister)
-      return // Nothing to do
+    if (this.fetchUnregister) return // Nothing to do
 
     this.fetchUnregister = fetchIntercept.register({
       request: (url, requestConfig) => {
@@ -43,7 +39,7 @@ class FetchPatchService {
 
         // Include any requestConfig headers to ensure they are retained
         let headers: Headers = {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         }
 
         // Required token for protected authenticated access
@@ -76,10 +72,9 @@ class FetchPatchService {
     this.fetchUnregister = null
   }
 
-  public getBasePath() {
+  getBasePath() {
     return this.basePath
   }
-
 }
 
 export const fetchPatchService = new FetchPatchService()
