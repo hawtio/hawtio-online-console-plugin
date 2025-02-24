@@ -1,11 +1,5 @@
 import React, { useEffect } from 'react'
-import {
-  MenuToggle,
-  MenuToggleElement,
-  Select,
-  SelectList,
-  SelectOption,
-} from '@patternfly/react-core'
+import { MenuToggle, MenuToggleElement, Select, SelectList, SelectOption } from '@patternfly/react-core'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ModuleIcon } from '@patternfly/react-icons'
 import { hawtio, usePlugins, Plugin } from '@hawtio/react'
@@ -27,21 +21,19 @@ export const PluginMenuDropDown: React.FunctionComponent = () => {
    */
   useEffect(() => {
     const filteredPlugins = plugins.filter(plugin => plugin.path != null)
-    const activePlugins = filteredPlugins
-      .filter(plugin => {
-        let pluginPath = hawtio.fullPath(plugin.path!)
+    const activePlugins = filteredPlugins.filter(plugin => {
+      let pluginPath = hawtio.fullPath(plugin.path!)
 
-        if (!pluginPath.startsWith('/'))
-          pluginPath = '/' + pluginPath
+      if (!pluginPath.startsWith('/')) pluginPath = '/' + pluginPath
 
-        return location.pathname.startsWith(pluginPath)
-      })
+      return location.pathname.startsWith(pluginPath)
+    })
 
-    const activePlugin = activePlugins.length > 0 ? activePlugins[0] :
-      (filteredPlugins.length > 0) ? filteredPlugins[0] : null
+    const activePlugin =
+      activePlugins.length > 0 ? activePlugins[0] : filteredPlugins.length > 0 ? filteredPlugins[0] : null
 
     setSelected(activePlugin ? pluginEntry(activePlugin) : '')
-  }, [plugins])
+  }, [plugins, location])
 
   const onToggleClick = () => {
     setIsOpen(!isOpen)
@@ -59,24 +51,24 @@ export const PluginMenuDropDown: React.FunctionComponent = () => {
 
   return (
     <Select
-      id="single-select"
+      id='single-select'
       className='online-header-toolbar-dropdown'
       isOpen={isOpen}
       selected={selected}
       onSelect={onSelect}
-      onOpenChange={(isOpen) => setIsOpen(isOpen)}
+      onOpenChange={isOpen => setIsOpen(isOpen)}
       shouldFocusToggleOnSelect
       toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-          <MenuToggle
-            id='plugin-header-dropdown-toggle'
-            className='plugin-header-dropdown-toggle'
-            variant={'plain'}
-            ref={toggleRef}
-            onClick={onToggleClick}
-            isExpanded={isOpen}
-          >
-            <ModuleIcon /> {selected}
-          </MenuToggle>
+        <MenuToggle
+          id='plugin-header-dropdown-toggle'
+          className='plugin-header-dropdown-toggle'
+          variant={'plain'}
+          ref={toggleRef}
+          onClick={onToggleClick}
+          isExpanded={isOpen}
+        >
+          <ModuleIcon /> {selected}
+        </MenuToggle>
       )}
     >
       <SelectList>
@@ -87,12 +79,11 @@ export const PluginMenuDropDown: React.FunctionComponent = () => {
               value={pluginEntry(plugin)}
               key={plugin.id}
               isSelected={selected === pluginEntry(plugin)}
-              component={props => <NavLink {...props} to={hawtio.fullPath(plugin.path!)} /> }
+              component={props => <NavLink {...props} to={hawtio.fullPath(plugin.path!)} />}
             >
               {pluginEntry(plugin)}
             </SelectOption>
-          ))
-        }
+          ))}
       </SelectList>
     </Select>
   )

@@ -1,9 +1,10 @@
-import { fetchPatchService } from "./fetch-patch-service"
+import { fetchPatchService } from './fetch-patch-service'
 import {
   camel,
   configManager,
   consoleStatus,
   hawtio,
+  HawtioPlugin,
   jmx,
   jolokiaService,
   logs,
@@ -12,16 +13,15 @@ import {
   runtime,
   springboot,
   userService,
-  workspace
+  workspace,
 } from '@hawtio/react'
 import { HAWTIO_ONLINE_VERSION } from './constants'
 import { log } from './globals'
-import { K8sPod } from "./types"
-import { connectionService } from "./connection-service"
-import { pluginHeaderDropdown, pluginHeaderDropdownId } from "./plugins"
+import { K8sPod } from './types'
+import { connectionService } from './connection-service'
+import { pluginHeaderDropdown, pluginHeaderDropdownId } from './plugins'
 
 class HawtioService {
-
   private initialized?: boolean = false
   private resolved: boolean = false
   private error?: Error
@@ -67,7 +67,7 @@ class HawtioService {
     return true
   }
 
-  private async initPlugin(pluginIds: string[], id: string, bootstrapCb: Function) {
+  private async initPlugin(pluginIds: string[], id: string, bootstrapCb: HawtioPlugin) {
     const idx = pluginIds.findIndex(pluginId => pluginId === id)
     if (idx > -1) {
       log.debug(`(hawtio-service) Plugin already initialised so refreshing if necessary: ${id}`)
@@ -78,8 +78,8 @@ class HawtioService {
     bootstrapCb()
   }
 
-  public async reset(pod: K8sPod | null) {
-    if (! this.isInitialized()) {
+  async reset(pod: K8sPod | null) {
+    if (!this.isInitialized()) {
       /*
        * Initializing not previously attempted
        */
@@ -91,11 +91,11 @@ class HawtioService {
     hawtioService.setInitialized(true)
     log.debug('(hawtio-service) Hawtio is initialized ...')
 
-    if (! pod) {
+    if (!pod) {
       connectionService.clear()
     } else {
       const result = await this.establishConnection(pod)
-      if (! result) {
+      if (!result) {
         log.debug('Failed to establish the connection')
         return
       }
@@ -106,8 +106,7 @@ class HawtioService {
      * hawtio/react plugins and services
      */
 
-    const pluginIds = hawtio.getPlugins()
-      .map(plugin => plugin.id)
+    const pluginIds = hawtio.getPlugins().map(plugin => plugin.id)
 
     // Register or refresh Hawtio plugins
     await this.initPlugin(pluginIds, 'consolestatus', consoleStatus)

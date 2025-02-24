@@ -1,7 +1,9 @@
+/* eslint-disable import/first */
+
 /*
  * Tell testing node environment to allow self-signed certificates
  */
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
 
 /*
  * Uncomment this to enable tracing of
@@ -11,22 +13,48 @@ process.env.LOG_LEVEL = 'trace'
 
 import request from 'supertest'
 import path from 'path'
-import {
-  CLUSTER_BASE_ADDRESS, CLUSTER_HOST, CLUSTER_PORT,
-  runningClusterServer, jolokiaUri, testData
-} from './testing'
+import { CLUSTER_BASE_ADDRESS, CLUSTER_HOST, CLUSTER_PORT, runningClusterServer, jolokiaUri, testData } from './testing'
 import { enableRbac, isOptimisedCachedDomains, setClusterAddr } from './jolokia-agent'
 import { cloneObject } from './utils'
 
 process.env['HAWTIO_ONLINE_GATEWAY_APP_PORT'] = '11443'
-process.env['HAWTIO_ONLINE_GATEWAY_SSL_KEY'] = path.resolve(__dirname, '..', 'test-tls', 'private', 'server.unit.test.key')
-process.env['HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE'] = path.resolve(__dirname, '..', 'test-tls', 'certs', 'server.unit.test.crt')
-process.env['HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE_CA'] = path.resolve(__dirname, '..', 'test-tls', 'CA', 'unit.test-ca.crt')
-process.env['HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY'] = path.resolve(__dirname, '..', 'test-tls', 'private', 'proxy.unit.test.key')
-process.env['HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE'] = path.resolve(__dirname, '..', 'test-tls', 'certs', 'proxy.unit.test.crt')
+process.env['HAWTIO_ONLINE_GATEWAY_SSL_KEY'] = path.resolve(
+  __dirname,
+  '..',
+  'test-tls',
+  'private',
+  'server.unit.test.key',
+)
+process.env['HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE'] = path.resolve(
+  __dirname,
+  '..',
+  'test-tls',
+  'certs',
+  'server.unit.test.crt',
+)
+process.env['HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE_CA'] = path.resolve(
+  __dirname,
+  '..',
+  'test-tls',
+  'CA',
+  'unit.test-ca.crt',
+)
+process.env['HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY'] = path.resolve(
+  __dirname,
+  '..',
+  'test-tls',
+  'private',
+  'proxy.unit.test.key',
+)
+process.env['HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE'] = path.resolve(
+  __dirname,
+  '..',
+  'test-tls',
+  'certs',
+  'proxy.unit.test.crt',
+)
 
 // Have to have import statement come after the setting of the node property
-// eslint-disable-next-line
 import { gatewayServer, runningGatewayServer } from './gateway-api'
 
 /*

@@ -138,7 +138,15 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
   const json = JSON.stringify(body)
 
   // /apis/authorization.k8s.io/v1/namespaces/{namespace}/localsubjectaccessreviews
-  const authUri = joinPaths(getClusterAddr(), 'apis', api, 'v1', 'namespaces', agentInfo.namespace, 'localsubjectaccessreviews')
+  const authUri = joinPaths(
+    getClusterAddr(),
+    'apis',
+    api,
+    'v1',
+    'namespaces',
+    agentInfo.namespace,
+    'localsubjectaccessreviews',
+  )
 
   logger.trace(`(jolokia-agent) Verifying authorization at uri ${authUri}`)
 
@@ -147,29 +155,29 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
     body: json,
     headers: toFetchHeaders(agentInfo.requestHeaders),
     agent: new https.Agent({
-        cert: agentInfo.sslOptions.certCA,
-        rejectUnauthorized: false,
-        keepAlive: false,
-      })
-    })
+      cert: agentInfo.sslOptions.certCA,
+      rejectUnauthorized: false,
+      keepAlive: false,
+    }),
+  })
 
   if (!response.ok) {
     logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${response.status})`)
     return new SimpleResponse(
       response.status,
       JSON.stringify({ message: response.statusText }),
-      fromFetchHeaders(response.headers)
+      fromFetchHeaders(response.headers),
     )
   }
 
-  let data = await response.json()
-  let sar = isObject(data) ? data : JSON.parse(data as string)
+  const data = await response.json()
+  const sar = isObject(data) ? data : JSON.parse(data as string)
 
   logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview sar: (${printObject(sar)})`)
   return new SimpleResponse(
     response.status,
     (useForm ? sar.status.allowed : sar.allowed).toString(),
-    fromFetchHeaders(response.headers)
+    fromFetchHeaders(response.headers),
   )
 }
 
@@ -185,10 +193,10 @@ async function getPodIP(agentInfo: AgentInfo): Promise<string> {
     method: 'GET',
     headers: toFetchHeaders(agentInfo.requestHeaders),
     agent: new https.Agent({
-        cert: agentInfo.sslOptions.certCA,
-        rejectUnauthorized: false,
-        keepAlive: false,
-      })
+      cert: agentInfo.sslOptions.certCA,
+      rejectUnauthorized: false,
+      keepAlive: false,
+    }),
   })
   if (!res.ok) {
     return Promise.reject(res)
@@ -214,13 +222,13 @@ async function callJolokiaAgent(
   const headers = toFetchHeaders(agentInfo.requestHeaders)
   logger.trace(`(jolokia-agent) callJolokiaAgent - ${agentUri}`)
   logger.trace(`(jolokia-agent) callJolokiaAgent - sending headers`)
-  headers.forEach((value,key) => {
+  headers.forEach((value, key) => {
     logger.trace(`(jolokia-agent) callJolokiaAgent - header ${key} : ${value}`)
   })
 
   const options: fetch.RequestInit = {
     method: method,
-    headers: toFetchHeaders(agentInfo.requestHeaders)
+    headers: toFetchHeaders(agentInfo.requestHeaders),
   }
 
   if (method === 'POST') {
@@ -247,14 +255,10 @@ async function callJolokiaAgent(
     const data = await response.text()
     logger.trace(`(jolokia-agent) callJolokiaAgent response: ${printObject(data)}`)
 
-    return new SimpleResponse(
-      response.status,
-      data,
-      fromFetchHeaders(response.headers)
-    )
+    return new SimpleResponse(response.status, data, fromFetchHeaders(response.headers))
   } catch (error) {
     logger.trace(`Error when getting data from response: ${printObject(error)}`)
-    throw new Error('Failed to parse data from response', {cause: error})
+    throw new Error('Failed to parse data from response', { cause: error })
   }
 }
 
@@ -348,7 +352,7 @@ async function listMBeans(podIP: string, agentInfo: AgentInfo): Promise<Record<s
   const options: fetch.RequestInit = {
     method: 'POST',
     body: JSON.stringify({ type: 'list' }),
-    headers: toFetchHeaders(agentInfo.requestHeaders)
+    headers: toFetchHeaders(agentInfo.requestHeaders),
   }
 
   if (agentInfo.protocol === 'https') {
@@ -426,10 +430,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
 
     // Re-assembled bulk response
     const headers = new Headers(jolokiaResponse.headers)
-    const response = new SimpleResponse(
-      jolokiaResponse.status,
-      JSON.stringify(bulk),
-      headers)
+    const response = new SimpleResponse(jolokiaResponse.status, JSON.stringify(bulk), headers)
 
     // Override the content length that changed while re-assembling the bulk response
     // Headers on this response is immutable so update agentinfo.response
@@ -452,10 +453,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
 
     const intercepted = RBAC.intercept(mbeanRequest, role, mbeans)
     if (intercepted.intercepted) {
-      return new SimpleResponse(
-        intercepted.response?.status || 502,
-        JSON.stringify(intercepted.response)
-      )
+      return new SimpleResponse(intercepted.response?.status || 502, JSON.stringify(intercepted.response))
     }
 
     return callJolokiaAgent(podIP, agentInfo, agentInfo.request.body)
@@ -484,7 +482,7 @@ async function proxyJolokiaAgentWithRbac(agentInfo: AgentInfo): Promise<SimpleRe
       // map the `get` verb to the `viewer` role
       role = 'viewer'
     } else {
-      return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }`})
+      return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }` })
     }
   }
 
@@ -499,9 +497,8 @@ async function proxyJolokiaAgentWithoutRbac(agentInfo: AgentInfo): Promise<Simpl
   const response = await selfLocalSubjectAccessReview('update', agentInfo)
   if (!response.ok) {
     return reject(response.status, { reason: `Authorization was rejected: ${response.body}` })
-  }
-  else if (response.body !== 'true') {
-    return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }`})
+  } else if (response.body !== 'true') {
+    return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }` })
   }
 
   const podIP = await getPodIP(agentInfo)
@@ -565,7 +562,7 @@ export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, ssl
       } else {
         simpleResponse = new SimpleResponse(
           !error.status ? 502 : error.status,
-          !error.body ? error.statusText : error.statusText + '---' + error.body
+          !error.body ? error.statusText : error.statusText + '---' + error.body,
         )
       }
 

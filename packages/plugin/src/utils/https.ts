@@ -1,4 +1,3 @@
-
 /*
  * Function for extracting the CSRF Token necessary
  * for correct authentication when making requests
@@ -10,12 +9,13 @@
 export function getCSRFToken() {
   const cookiePrefix = 'csrf-token='
   return (
-    document && document.cookie &&
-      document.cookie
-        .split(';')
-        .map((c) => c.trim())
-        .filter((c) => c.startsWith(cookiePrefix))
-        .map((c) => c.slice(cookiePrefix.length))
-        .pop()
-      )
+    document &&
+    document.cookie &&
+    document.cookie
+      .split(';')
+      .map(c => c.trim())
+      .filter(c => c.startsWith(cookiePrefix))
+      .map(c => c.slice(cookiePrefix.length))
+      .pop()
+  )
 }

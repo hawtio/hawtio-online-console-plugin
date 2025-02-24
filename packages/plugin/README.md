@@ -20,6 +20,6 @@ The project file for the plugin provides the following commands that will aid in
 - `yarn start:console`: Starts a development version of the OCP console and loads in the running development plugin;
 
 > [!NOTE]  
-Both of these commands should be executed in different terminals.
+> Both of these commands should be executed in different terminals.
 
 - `yarn build`: Builds the product version of the plugin.

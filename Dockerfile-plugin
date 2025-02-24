@@ -13,7 +13,6 @@ COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
 COPY Makefile Makefile
 COPY yarn.lock yarn.lock
-COPY ${PACKAGE_PLUGIN}/locales locales
 COPY ${PACKAGE_PLUGIN}/public public
 COPY ${PACKAGE_PLUGIN}/src src
 COPY ${PACKAGE_PLUGIN}/console-extensions.json console-extensions.json

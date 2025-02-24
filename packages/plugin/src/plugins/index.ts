@@ -1,5 +1,5 @@
-import { hawtio, HawtioPlugin } from "@hawtio/react"
-import { PluginMenuDropDown } from "./PluginMenuDropdown"
+import { hawtio, HawtioPlugin } from '@hawtio/react'
+import { PluginMenuDropDown } from './PluginMenuDropdown'
 
 export const pluginHeaderDropdownId = 'plugin-header-dropdown'
 const pluginTitle = 'Plugin Header Dropdown'

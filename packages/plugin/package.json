@@ -15,8 +15,7 @@
     "bridge-auth": "cd bridge-auth-https && ./setup-oauth.sh",
     "build": "yarn clean && NODE_ENV=production webpack --env PLUGIN_NAME=$npm_package_name --env PACKAGE_VERSION=$npm_package_version --config webpack.config.prod.js",
     "clean": "rm -rf dist",
-    "webpack": "node -r ts-node/register --inspect ../../node_modules/.bin/webpack",
-    "i18n": "./i18n-scripts/build-i18n.sh && node ./i18n-scripts/set-english-defaults.js"
+    "webpack": "node -r ts-node/register --inspect ../../node_modules/.bin/webpack"
   },
   "devDependencies": {
     "@hawtio/react": "1.9.0-r17-virtualrouter-alpha17",
@@ -40,7 +39,6 @@
     "dotenv-webpack": "^8.1.0",
     "fetch-intercept": "^2.4.0",
     "html-webpack-plugin": "^5.6.0",
-    "i18next-parser": "^3.11.0",
     "interpolate-html-plugin": "^4.0.0",
     "jsonpath": "^1.1.1",
     "kubernetes-types": "^1.30.0",
@@ -50,7 +48,6 @@
     "pluralize": "^8.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-i18next": "^11.7.3",
     "react-router": "5.3.x",
     "react-router-dom": "5.3.x",
     "sass": "^1.84.0",
@@ -75,7 +72,6 @@
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
     "babel-loader": "^9.2.1",
-    "i18next": "^23.11.5",
     "mocha": "^10.5.1"
   },
   "resolutions": {

@@ -10,7 +10,7 @@ export const testData = {
       port: 10001,
       path: '/actuator/jolokia',
       params: 'maxDepth=7&maxCollectionSize=50000&ignoreErrors=true&canonicalNaming=false',
-    }
+    },
   },
   authorization: {
     forbidden: false,
@@ -19,18 +19,22 @@ export const testData = {
     allowedResponse: {
       kind: 'SubjectAccessReviewResponse',
       apiVersion: 'authorization.openshift.io/v1',
-      get namespace() { return testData.metadata.namespace },
+      get namespace() {
+        return testData.metadata.namespace
+      },
       allowed: true,
       reason: 'RBAC: allowed by ClusterRoleBinding "admin" of ClusterRole "cluster-admin" to User "admin"',
     },
     notAllowedResponse: {
       kind: 'SubjectAccessReviewResponse',
       apiVersion: 'authorization.openshift.io/v1',
-      get namespace() { return testData.metadata.namespace },
+      get namespace() {
+        return testData.metadata.namespace
+      },
       allowed: false,
     },
     rejectedResponse: {
-      message: 'Subject Access Review Result: { allowed: false }'
+      message: 'Subject Access Review Result: { allowed: false }',
     },
   },
   pod: {
