@@ -63,3 +63,17 @@
 #jmx-tree-view .pf-v5-c-tree-view__node-text {
   border-color: transparent !important;
 }
+
+/*
+ * ========================================
+ * Changes the background of the source tab
+ * to match the console theme
+ * ========================================
+ */
+.monaco-editor-background {
+  background-color: var(--pf-c-page--BackgroundColor);
+}
+
+.monaco-editor .margin {
+  background-color: var(--pf-c-page--BackgroundColor);
+}
