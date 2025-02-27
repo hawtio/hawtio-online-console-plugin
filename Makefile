@@ -453,7 +453,6 @@ endif
 #=== Calls kustomize
 #=== Calls kubectl
 #=== Calls jq
-#=== Calls generate-proxying
 #
 #* PARAMETERS:
 #** NAMESPACE:               Set the namespace for the resources
@@ -477,7 +476,6 @@ ifeq ($(DRY_RUN), true)
 	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(PLUGIN) | \
 		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/'
 else
-	@$(MAKE) -s generate-proxying
 	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(PLUGIN) | \
 		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
 		$(KUBECTL) apply -f -
@@ -493,7 +491,8 @@ endif
 #=== Calls kustomize
 #=== Calls kubectl
 #=== Calls jq
-#=== Calls generate-proxying
+#=== Calls install-gateway
+#=== Calls install-plugin
 #
 #* PARAMETERS:
 #** NAMESPACE:               Set the namespace for the resources

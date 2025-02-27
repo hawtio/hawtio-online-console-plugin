@@ -7,7 +7,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hawtio-online-console-plugin-rbac
-  namespace: hawtio
+  namespace: placeholder
 data:
   ACL.yaml: |
     # This file defines the roles allowed for MBean operations

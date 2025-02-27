@@ -8,7 +8,7 @@ spec:
     type: Service
     service:
       name: hawtio-online-console-plugin
-      namespace: hawtio-dev
+      namespace: placeholder
       port: 9443
       basePath: '/'
   proxy:
@@ -19,14 +19,5 @@ spec:
         type: Service
         service:
           name: hawtio-online-console-plugin-gateway
-          namespace: hawtio-dev
-          port: 8443
-    - type: Service
-      alias: echo
-      authorization: UserToken
-      endpoint:
-        type: Service
-        service:
-          name: http-echo
-          namespace: hawtio-dev
+          namespace: placeholder
           port: 8443
