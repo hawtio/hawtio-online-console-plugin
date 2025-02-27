@@ -107,4 +107,3 @@ CMD ["/usr/share/nginx/nginx.sh"]
 LABEL name="hawtio/hawtio-online-console-plugin"
 LABEL description="Hawtio Online Console Integrated Plugin"
 LABEL maintainer="Paul Richardson <parichar@redhat.com>"
-LABEL version="0.0.1"

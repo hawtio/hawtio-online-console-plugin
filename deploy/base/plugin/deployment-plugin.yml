@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: hawtio-online-console-plugin
-          image: quay.io/hawtio/online-console-plugin:0.0.1
+          image: quay.io/hawtio/online-console-plugin:0.1.0
           ports:
             - name: nginx
               containerPort: 9443

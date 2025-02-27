@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: hawtio-online-console-plugin-gateway
-          image: quay.io/hawtio/online-console-plugin-gateway:0.0.1
+          image: quay.io/hawtio/online-console-plugin-gateway:0.1.0
           env:
             - name: HAWTIO_ONLINE_RBAC_ACL
               value: /etc/hawtio/rbac/ACL.yaml
