@@ -46,13 +46,14 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
         log.debug(`Intialising Hawtio for pod ${pod.metadata?.name} ...`)
         await hawtioService.reset(pod)
 
-        if (!hawtioService.isResolved()) {
+        if (!hawtioService.isResolved() || hawtioService.getError()) {
           setError(new Error('Failure to initialize the HawtioService', { cause: hawtioService.getError() }))
           setLoading(false) // error occurred so loading is done
           return
         }
 
         log.debug(`Hawtio initialize complete for ${pod.metadata?.name} ...`)
+        setError(null)
         setLoading(false)
       }
 

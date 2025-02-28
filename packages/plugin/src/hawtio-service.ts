@@ -45,10 +45,12 @@ class HawtioService {
     try {
       const url = await connectionService.probeJolokiaUrl(pod)
       if (!url) {
+        connectionService.clear()
         this.setError(new Error('Failed to reach a recognised jolokia url for this pod'))
         return false
       }
     } catch (error) {
+      connectionService.clear()
       this.setError(new Error(`Cannot access the jolokia url for this pod`, { cause: error }))
       return false
     }
@@ -60,6 +62,7 @@ class HawtioService {
      */
     const error = await connectionService.connect(pod)
     if (error) {
+      connectionService.clear()
       this.setError(error)
       return false
     }
@@ -79,6 +82,9 @@ class HawtioService {
   }
 
   async reset(pod: K8sPod | null) {
+    // reset the error
+    this.error = undefined
+
     if (!this.isInitialized()) {
       /*
        * Initializing not previously attempted
