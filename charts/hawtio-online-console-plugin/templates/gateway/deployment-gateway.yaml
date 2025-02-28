@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.gateway | indent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.gateway.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.gateway.name }}
+    spec:
+      containers:
+        - name: {{ .Values.gateway.name }}
+          image: "{{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          env:
+            - name: HAWTIO_ONLINE_RBAC_ACL
+              value: /etc/hawtio/rbac/ACL.yaml
+            - name: HAWTIO_ONLINE_GATEWAY_SSL_KEY
+              value: /etc/tls/private/serving/tls.key
+            - name: HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE
+              value: /etc/tls/private/serving/tls.crt
+            - name: HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE_CA
+              value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            - name: HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY
+              value: /etc/tls/private/proxying/tls.key
+            - name: HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE
+              value: /etc/tls/private/proxying/tls.crt
+            - name: HAWTIO_ONLINE_GATEWAY_LOG_LEVEL
+              value: {{ .Values.gateway.log.level }}
+          ports:
+            - name: express
+              containerPort: {{ .Values.gateway.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: express
+              scheme: HTTPS
+            periodSeconds: 120
+            timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: express
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: hawtio-rbac
+              mountPath: /etc/hawtio/rbac
+            - name: hawtio-serving
+              readOnly: true
+              mountPath: /etc/tls/private/serving
+            - name: hawtio-proxying
+              readOnly: true
+              mountPath: /etc/tls/private/proxying
+      volumes:
+        - name: hawtio-serving
+          secret:
+            secretName: {{ .Values.gateway.secrets.serving.name }}
+            defaultMode: 420
+        - name: hawtio-proxying
+          secret:
+            secretName: {{ .Values.gateway.secrets.proxy.name }}
+            defaultMode: 420
+        - name: hawtio-rbac
+          configMap:
+            name: {{ .Values.gateway.config.rbac.name }}
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%

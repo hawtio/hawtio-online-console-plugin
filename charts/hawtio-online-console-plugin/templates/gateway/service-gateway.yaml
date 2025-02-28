@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: {{ .Values.gateway.secrets.serving.name }}
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.gateway | indent 4 }}
+spec:
+  ports:
+    - name: "{{ .Values.gateway.service.port }}-tcp"
+      protocol: TCP
+      port: {{ .Values.gateway.service.port }}
+      targetPort: express
+  selector:
+    app: {{ .Values.gateway.name }}
+  type: ClusterIP
+  sessionAffinity: None

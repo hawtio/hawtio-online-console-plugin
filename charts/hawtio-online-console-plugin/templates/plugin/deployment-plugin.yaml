@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.plugin.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.plugin | indent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.plugin.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.plugin.name }}
+    spec:
+      containers:
+        - name: "{{ .Release.Name }}"
+          image: "{{ .Values.plugin.image.name }}:{{ .Values.plugin.image.tag | default .Chart.AppVersion }}"
+          ports:
+            - name: nginx
+              containerPort: {{ .Values.plugin.service.port }}
+              protocol: TCP
+          imagePullPolicy: {{ .Values.plugin.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          volumeMounts:
+            - name: hawtio-serving
+              readOnly: true
+              mountPath: /etc/tls/private/serving
+      volumes:
+        - name: hawtio-serving
+          secret:
+            secretName: {{ .Values.plugin.secrets.serving.name }}
+            defaultMode: 420
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%

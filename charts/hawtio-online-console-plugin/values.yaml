@@ -1,0 +1,40 @@
+# Default values for hawtio-online-console-plugin.
+
+# Override tthe tags to install a different version of the containers
+plugin:
+  name: hawtio-online-console-plugin
+  image:
+    name: quay.io/hawtio/online-console-plugin
+#    tag: 0.1.0
+    pullPolicy: IfNotPresent
+  component: plugin
+  application: hawtio-online-console-plugin
+  secrets:
+    serving:
+      name: hawtio-online-console-plugin-serving
+  service:
+    port: 9443
+
+gateway:
+  name: hawtio-online-console-plugin-gateway
+  shortname: gateway
+  image:
+    name: quay.io/hawtio/online-console-plugin-gateway
+#    tag: 0.1.0
+    pullPolicy: IfNotPresent
+  component: server
+  application: hawtio-online-console-plugin
+  secrets:
+    proxy:
+      name: hawtio-online-console-plugin-gateway-proxying
+    serving:
+      name: hawtio-online-console-plugin-gateway-serving
+  config:
+    rbac:
+      name: hawtio-online-console-plugin-rbac
+  log:
+    level: info
+  service:
+    port: 8443
+
+resources: {}
