@@ -12,8 +12,7 @@ spec:
       port: 9443
       basePath: '/'
   proxy:
-    - type: Service
-      alias: gateway
+    - alias: gateway
       authorization: UserToken
       endpoint:
         type: Service

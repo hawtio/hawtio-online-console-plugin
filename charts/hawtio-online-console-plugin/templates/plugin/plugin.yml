@@ -15,8 +15,7 @@ spec:
       port: {{ .Values.plugin.service.port }}
       basePath: '/'
   proxy:
-    - type: Service
-      alias: {{ .Values.gateway.shortname }}
+    - alias: {{ .Values.gateway.shortname }}
       authorization: UserToken
       endpoint:
         type: Service
