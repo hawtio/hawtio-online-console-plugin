@@ -98,6 +98,7 @@ const common = (mode, publicPath, env) => {
           displayName: 'HawtIO OpenShift Console Plugin',
           description: 'HawtIO Plugin serving integrated UI in OpenShift Console.',
           exposedModules: {
+            HawtioDiscover: './pages/HawtioDiscover',
             HawtioMainTab: './pages/HawtioMainTab',
             HawtioMainPrefs: './pages/HawtioMainPrefs',
           },

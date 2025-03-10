@@ -1,5 +1,23 @@
 [
   {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/hawtio-discover",
+      "component": { "$codeRef": "HawtioDiscover" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "hawtio-discover",
+      "name": "Hawtio",
+      "href": "/hawtio-discover",
+      "perspective": "admin",
+      "section": "workloads"
+    }
+  },
+  {
     "type": "console.tab/horizontalNav",
     "properties": {
       "page": {

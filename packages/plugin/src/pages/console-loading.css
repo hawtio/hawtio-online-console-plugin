@@ -4,10 +4,13 @@
   margin-right: auto;
   margin-bottom: 2%;
   font-style: italic;
+  text-align: center;
 }
 
 .hawtio-console-loading-icon {
   display: flex;
   margin-left: auto;
   margin-right: auto;
+  text-align: center;
+  width: 3%;
 }

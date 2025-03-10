@@ -4,7 +4,7 @@
  * so do not move this down the import list below @hawtio/react
  */
 import { fetchPatchService } from '../fetch-patch-service'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Card, CardBody, PageSection, PageSectionVariants } from '@patternfly/react-core'
 import '@patternfly/patternfly/patternfly.css'
 import { K8sPod } from '../types'
@@ -25,13 +25,19 @@ log.info(`Using base path: ${fetchPatchService.getBasePath()}`)
 interface HawtioMainTabProps {
   ns: string
   name: string
-  obj: K8sPod
+  obj: K8sPod | null
+}
+
+function podUid(pod: K8sPod | null): string | null {
+  if (!pod) return null
+
+  return pod.metadata?.uid ?? null
 }
 
 export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props => {
   const [isLoading, setLoading] = useState<boolean>(true)
+  const podIdRef = useRef<string|null>(podUid(props.obj))
   const [error, setError] = useState<Error | null>()
-  const pod = props.obj
 
   useEffect(() => {
     fetchPatchService.setupFetch()
@@ -41,9 +47,12 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
   }, [])
 
   useEffect(() => {
+    const newId = podUid(props.obj) ?? ''
+    const podChanged = newId !== podIdRef.current
+
     if (isLoading) {
-      const awaitService = async () => {
-        log.debug(`Intialising Hawtio for pod ${pod.metadata?.name} ...`)
+      const awaitService = async (pod: K8sPod | null) => {
+        log.debug(`Intialising Hawtio for pod ${pod?.metadata?.name} ...`)
         await hawtioService.reset(pod)
 
         if (!hawtioService.isResolved() || hawtioService.getError()) {
@@ -52,14 +61,22 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
           return
         }
 
-        log.debug(`Hawtio initialize complete for ${pod.metadata?.name} ...`)
+        log.debug(`Hawtio initialize complete for ${pod?.metadata?.name} ...`)
         setError(null)
         setLoading(false)
       }
+      awaitService(props.obj)
 
-      awaitService()
+    } else if (podChanged) {
+      /*
+       * Ensure that we change state to refresh
+       * the page on a new pod
+       */
+      setLoading(true)
+      podIdRef.current = newId
     }
-  }, [isLoading, pod])
+
+  }, [isLoading, props.obj])
 
   if (isLoading) {
     return <ConsoleLoading />

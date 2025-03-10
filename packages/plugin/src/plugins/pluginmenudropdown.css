@@ -1,0 +1,5 @@
+.plugin-header-dropdown-toggle .pf-v5-c-menu-toggle.pf-m-secondary::before {
+  border: none !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+}

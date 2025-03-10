@@ -4,6 +4,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { ModuleIcon } from '@patternfly/react-icons'
 import { hawtio, usePlugins, Plugin } from '@hawtio/react'
 import { log } from '../globals'
+import './pluginmenudropdown.css'
 
 export const PluginMenuDropDown: React.FunctionComponent = () => {
   const { plugins, pluginsLoaded } = usePlugins()
@@ -62,12 +63,13 @@ export const PluginMenuDropDown: React.FunctionComponent = () => {
         <MenuToggle
           id='plugin-header-dropdown-toggle'
           className='plugin-header-dropdown-toggle'
-          variant={'plain'}
+          variant={'secondary'}
           ref={toggleRef}
           onClick={onToggleClick}
           isExpanded={isOpen}
+          icon={<ModuleIcon/>}
         >
-          <ModuleIcon /> {selected}
+          {selected}
         </MenuToggle>
       )}
     >
