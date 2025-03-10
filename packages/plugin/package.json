@@ -75,6 +75,7 @@
     "mocha": "^10.5.1"
   },
   "resolutions": {
-    "@types/react": "^17.0.37"
+    "@types/react": "^17.0.37",
+    "@monaco-editor/react": "4.7.0"
   }
 }
