@@ -317,7 +317,7 @@ license: yarn
 
 #---
 #
-#@ images
+#@ image
 #
 #== Executes a local build of the production container images
 #

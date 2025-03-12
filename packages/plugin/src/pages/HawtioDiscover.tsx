@@ -1,11 +1,13 @@
 import { MenuToggle, MenuToggleElement, Page, PageSection, Select, SelectList, SelectOption, Text, TextContent, Title } from '@patternfly/react-core'
-import { CheckCircleIcon, CubesIcon } from '@patternfly/react-icons'
-import { k8sListItems, K8sResourceCommon, NamespaceBar, useActiveNamespace, useK8sModel } from '@openshift-console/dynamic-plugin-sdk'
+import { CubesIcon } from '@patternfly/react-icons'
+import { k8sListItems, K8sModel, K8sResourceCommon, NamespaceBar, useActiveNamespace, useK8sModel } from '@openshift-console/dynamic-plugin-sdk'
 import { Ref, useEffect, useState } from 'react'
-import { K8sPod } from '../types'
+import { K8sNamespace, K8sPod } from '../types'
 import { ConsoleLoading } from './ConsoleLoading'
 import './hawtiodiscover.css'
 import { HawtioMainTab } from './HawtioMainTab'
+import { connectionService } from 'src/connection-service'
+import { DiscoverEmptyContent } from './DiscoverEmptyContent'
 
 interface HawtioDiscoverProps {
   ns: string
@@ -13,6 +15,7 @@ interface HawtioDiscoverProps {
 }
 
 const noPods = 'None Available'
+const allNS = '#ALL_NS#'
 
 function podName(pod: K8sPod): string {
   if (!pod.metadata || !pod.metadata.name)
@@ -25,8 +28,24 @@ function k8sPod(pods: K8sPod[], name: string): K8sPod | null {
   return pods.find(pod => podName(pod) === name) ?? null
 }
 
+async function fetchJolokiaPods(podModel: K8sModel, namespace: string): Promise<K8sPod[]> {
+  const response = await k8sListItems({ model: podModel, queryParams: { ns: namespace } })
+
+  const pods: K8sPod[] = []
+  for (const res of response) {
+    const pod: K8sPod = res as K8sPod
+    if (connectionService.hasJolokiaPort(pod)) {
+      pods.push(res as K8sPod)
+    }
+  }
+
+  return pods
+}
+
 export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = props => {
   const [k8sPodModel] = useK8sModel({ group: 'core', version: 'v1', kind: 'Pod' })
+  const [k8sNSModel] = useK8sModel({ group: 'core', version: 'v1', kind: 'Namespace'})
+
   const [activeNamespace] = useActiveNamespace()
   const [namespace, setNamespace] = useState<string>(activeNamespace ?? '')
   const [pods, setPods] = useState<K8sPod[]>([])
@@ -37,29 +56,50 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
   const [isPodSelectOpen, setPodSelectIsOpen] = useState<boolean>(false)
   const [selectedPod, setSelectedPod] = useState<string>(noPods)
 
-  const [error, setError] = useState<Error | null>()
-
   useEffect(() => {
+    setLoading(true)
+
     if (!namespace || namespace.length === 0) {
       setPods([])
       setSelectedPod(noPods)
+      setLoading(false)
       return
     }
 
-    console.log('Updating pods')
+    if (namespace === allNS) {
+      /*
+       * Find pods in all namespaces
+       */
+      k8sListItems({ model: k8sNSModel, queryParams: {} })
+        .then(async (response: K8sResourceCommon[]) => {
+          const jPods: K8sPod[] = []
+          for (const res of response) {
+            const ns: K8sNamespace = res as K8sNamespace
+            if (ns && ns.metadata && ns.metadata.name) {
+              const pods = await fetchJolokiaPods(k8sPodModel, ns.metadata.name)
+              jPods.push(...pods)
+            }
+          }
 
-    k8sListItems({ model: k8sPodModel, queryParams: { ns: namespace } })
-      .then((response: K8sResourceCommon[]) => {
-        const newPods: K8sPod[] = []
-        for (const res of response) {
-          newPods.push(res as K8sPod)
-        }
-        setPods(newPods)
-        setSelectedPod(() => {
-          return newPods.length === 0 ? noPods : podName(newPods[0])
+          setPods(jPods)
+          setSelectedPod(() => {
+            return jPods.length === 0 ? noPods : podName(jPods[0])
+          })
+          setLoading(false)
         })
-        setLoading(false)
-      })
+    } else {
+      /*
+       * Find pods in the selected namespace
+       */
+      fetchJolokiaPods(k8sPodModel, namespace)
+        .then(pods => {
+          setPods(pods)
+          setSelectedPod(() => {
+            return pods.length === 0 ? noPods : podName(pods[0])
+          })
+          setLoading(false)
+        })
+    }
   }, [ namespace ])
 
   const onToggleSelectPodClick = () => {
@@ -73,6 +113,26 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
 
   const onNamespaceChange = async (namespace: string) => {
     setNamespace(namespace)
+  }
+
+  const pageTitle = () => {
+    if (!selectedPod || selectedPod === noPods)
+      return ''
+
+    return selectedPod
+  }
+
+  const displayHawtio = () => {
+    if (!selectedPod || selectedPod === noPods)
+      return ( <DiscoverEmptyContent/> )
+
+    return (
+      <HawtioMainTab
+        ns={namespace}
+        name={selectedPod}
+        obj={k8sPod(pods, selectedPod)}
+      />
+    )
   }
 
   return (
@@ -91,6 +151,7 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
             <MenuToggle
               id='pod-select-dropdown-toggle'
               className='pod-select-dropdown-toggle'
+              isDisabled={pods.length === 0}
               variant={'primary'}
               ref={toggleRef}
               onClick={onToggleSelectPodClick}
@@ -119,18 +180,14 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
       </NamespaceBar>
 
       <PageSection variant="dark">
-        <Title headingLevel="h1">{selectedPod}</Title>
+        <Title headingLevel="h1">{pageTitle()}</Title>
 
         {isLoading && (
           <ConsoleLoading />
         )}
 
         {!isLoading && (
-          <HawtioMainTab
-            ns={namespace}
-            name={selectedPod}
-            obj={k8sPod(pods, selectedPod)}
-          />
+          displayHawtio()
         )}
       </PageSection>
     </Page>

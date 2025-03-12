@@ -42,6 +42,11 @@ class HawtioService {
   private async establishConnection(pod: K8sPod): Promise<boolean> {
     log.debug(`Probing pod ${pod.metadata?.name} ...`)
 
+    if (!connectionService.hasJolokiaPort(pod)) {
+      this.setError(new Error(`This pod does not contain a jolokia port`))
+      return false
+    }
+
     try {
       const url = await connectionService.probeJolokiaUrl(pod)
       if (!url) {

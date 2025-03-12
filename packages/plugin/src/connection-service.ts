@@ -15,6 +15,7 @@ const DEFAULT_JOLOKIA_PORT = 8778
 const JOLOKIA_PORT_QUERY = '$.spec.containers[*].ports[?(@.name=="jolokia")]'
 
 class ConnectionService {
+
   podStatus(pod: K8sPod): string {
     // Return results that match
     // https://github.com/openshift/origin/blob/master/vendor/k8s.io/kubernetes/pkg/printers/internalversion/printers.go#L523-L615
@@ -237,6 +238,15 @@ class ConnectionService {
       const err = new HTTPError(response.status, msg)
       reject(err)
     }
+  }
+
+  /*
+   * Returns true if the pod metadata contains a 'jolokia' port
+   * False otherwise
+   */
+  hasJolokiaPort(pod: K8sPod): boolean {
+    const ports = jsonpath.query(pod, JOLOKIA_PORT_QUERY)
+    return ports.length > 0
   }
 
   /*
