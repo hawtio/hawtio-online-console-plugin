@@ -41,3 +41,5 @@ integration-tests/screenshots
 tls-certificates/*.crt
 tls-certificates/*.key
 tls-certificates/*.srl
+
+charts/publish

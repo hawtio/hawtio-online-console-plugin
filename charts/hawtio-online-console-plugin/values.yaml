@@ -1,6 +1,7 @@
 # Default values for hawtio-online-console-plugin.
 
-# Override tthe tags to install a different version of the containers
+# Override the tags to install a different version
+# of the containers - default: Chart.appVersion
 plugin:
   name: hawtio-online-console-plugin
   image:
