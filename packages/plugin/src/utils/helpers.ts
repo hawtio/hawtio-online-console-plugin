@@ -370,3 +370,36 @@ export function isOpenShift4(clusterVersion: string): boolean {
   const major = parseInt((clusterVersion || '4').split('.')[0], 10)
   return major >= 4
 }
+
+export type ThemeProperty = {
+  property: string,
+  value: {
+    dark: string,
+    light: string
+  }
+}
+
+/**
+ * Detect what theme the browser has been set to and
+ * return 'dark' | 'light'
+ */
+export function windowTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)')
+    .matches ? 'dark' : 'light'
+}
+
+/**
+ * Updates the given CSS property values for the given selector
+ */
+export function updateCSSValues(selectorId: string, ...themeProps: ThemeProperty[]) {
+  if (! selectorId) return
+  const selector = document.querySelector(selectorId)
+
+  if (! selector) return
+  const styler = (selector as HTMLInputElement).style
+
+  const themeColor = windowTheme()
+  themeProps.forEach(prop => {
+    styler.setProperty(prop.property, prop.value[themeColor])
+  })
+}

@@ -137,50 +137,52 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
 
   return (
     <Page>
-      <NamespaceBar
-        onNamespaceChange={onNamespaceChange}>
-        <Select
-          id='pod-select'
-          className=''
-          isOpen={isPodSelectOpen}
-          selected={selectedPod}
-          onSelect={onSelectPod}
-          onOpenChange={isOpen => setPodSelectIsOpen(isOpen)}
-          shouldFocusToggleOnSelect
-          toggle={(toggleRef: Ref<MenuToggleElement>) => (
-            <MenuToggle
-              id='pod-select-dropdown-toggle'
-              className='pod-select-dropdown-toggle'
-              isDisabled={pods.length === 0}
-              variant={'primary'}
-              ref={toggleRef}
-              onClick={onToggleSelectPodClick}
-              isExpanded={isPodSelectOpen}
-              icon={<CubesIcon/>}
-            >
-              Pod: {selectedPod}
-            </MenuToggle>
-          )}
-        >
-          <SelectList>
-            {
-              pods.length > 0 &&
-                pods.map(pod => (
-                  <SelectOption
-                    value={podName(pod)}
-                    key={pod.metadata?.uid}
-                    isSelected={selectedPod === podName(pod)}
-                  >
-                    {podName(pod)}
-                  </SelectOption>
-                ))
-            }
-          </SelectList>
-        </Select>
-      </NamespaceBar>
+      <PageSection id='hawtio-namespace-section'>
+        <NamespaceBar
+          onNamespaceChange={onNamespaceChange}>
+          <Select
+            id='pod-select'
+            className=''
+            isOpen={isPodSelectOpen}
+            selected={selectedPod}
+            onSelect={onSelectPod}
+            onOpenChange={isOpen => setPodSelectIsOpen(isOpen)}
+            shouldFocusToggleOnSelect
+            toggle={(toggleRef: Ref<MenuToggleElement>) => (
+              <MenuToggle
+                id='pod-select-dropdown-toggle'
+                className='pod-select-dropdown-toggle'
+                isDisabled={pods.length === 0}
+                variant={'primary'}
+                ref={toggleRef}
+                onClick={onToggleSelectPodClick}
+                isExpanded={isPodSelectOpen}
+                icon={<CubesIcon/>}
+              >
+                Pod: {selectedPod}
+              </MenuToggle>
+            )}
+          >
+            <SelectList>
+              {
+                pods.length > 0 &&
+                  pods.map(pod => (
+                    <SelectOption
+                      value={podName(pod)}
+                      key={pod.metadata?.uid}
+                      isSelected={selectedPod === podName(pod)}
+                    >
+                      {podName(pod)}
+                    </SelectOption>
+                  ))
+              }
+            </SelectList>
+          </Select>
+        </NamespaceBar>
+      </PageSection>
 
-      <PageSection variant="dark">
-        <Title headingLevel="h1">{pageTitle()}</Title>
+      <PageSection>
+        <Title headingLevel="h3">{pageTitle()}</Title>
 
         {isLoading && (
           <ConsoleLoading />

@@ -1,3 +1,15 @@
+
+/**
+ * Variables that can be set dynamically for css
+ * - dark theme by default
+ * - see helper.ts updateCSSValues()
+ */
+:root {
+  --hawtio-header--BackgroundColor: #151515;
+  --hawtio-diagram-node--BackgroundColor: #656565;
+  --hawtio-header--DropdownColor: #000000
+}
+
 /*
  * ========================================
  * Removes the vertical double scrollbar
@@ -15,9 +27,9 @@
 }
 
 /*
- * ========================================
- * Modifies height of the header
- * ========================================
+ * ===========================================
+ * Modifies appearance of the header toolbar
+ * ===========================================
  */
 #hawtio-header {
   --pf-v5-global--target-size--MinHeight: 2rem;
@@ -29,26 +41,45 @@
   --pf-v5-c-masthead__main--MinHeight: 2rem;
   --pf-v5-c-masthead__content--MinHeight: 2rem;
   --pf-v5-c-masthead--m-display-stack__main--MinHeight: 2rem;
+  /* Removes the padding */
+  --pf-v5-c-masthead--PaddingRight: 0;
+  --pf-v5-c-masthead--PaddingLeft: 0;
+  /* Sets the background colour according to the theme of the browser */
+  --pf-v5-c-masthead--BackgroundColor: var(--hawtio-header--BackgroundColor) !important;
+  /* Adds bottom border */
+  border-bottom-color: lightgrey;
+  border-bottom-width: thin;
+  border-bottom-style: solid;
+}
+
+#plugin-header-dropdown-toggle {
+  /* Changes text colour of the plugin toolbar menu button */
+  color: var(--hawtio-header--DropdownColor);
+}
+
+#plugin-header-dropdown-toggle::before {
+  /* Removes blue hyperlink button border from toolbar button */
+  border: none;
 }
 
 /*
- * ========================================
- * Ensures the background of the route
- * visual nodes is dark
- * ========================================
+ * =============================================
+ * Ensures the background of the route visual
+ * nodes is coloured according to browser theme
+ * =============================================
  */
 .react-flow__node-camel .camel-node-content {
-  background-color: #656565 !important;
+  background-color: var(--hawtio-diagram-node--BackgroundColor) !important;
 }
 
 /*
  * ========================================
- * Darken the gutter colour between the
+ * Theme the gutter colour between the
  * Camel/JMX trees and content page
  * ========================================
  */
 .gutter {
-  background-color: black !important;
+  background-color: var(--pf-c-page--BackgroundColor) !important;
 }
 
 /*
