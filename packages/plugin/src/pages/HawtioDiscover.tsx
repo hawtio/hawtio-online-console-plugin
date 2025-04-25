@@ -137,7 +137,7 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
 
   return (
     <Page>
-      <PageSection id='hawtio-namespace-section'>
+      <PageSection id='hawtio-discover-namespace-section'>
         <NamespaceBar
           onNamespaceChange={onNamespaceChange}>
           <Select
@@ -181,7 +181,7 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
         </NamespaceBar>
       </PageSection>
 
-      <PageSection>
+      <PageSection id='hawtio-discover-title-section'>
         <Title headingLevel="h3">{pageTitle()}</Title>
 
         {isLoading && (

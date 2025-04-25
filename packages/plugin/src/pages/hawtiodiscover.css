@@ -1,3 +1,11 @@
+#hawtio-discover-namespace-section {
+  padding-bottom: 0 !important;
+}
+
+#hawtio-discover-title-section h3 {
+  padding-bottom: 1em !important;
+}
+
 .pod-select-dropdown-toggle {
   background-color:  transparent !important;
   /*
