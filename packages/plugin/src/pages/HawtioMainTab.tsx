@@ -11,7 +11,7 @@ import { K8sPod } from '../types'
 import { hawtioService } from '../hawtio-service'
 import { Hawtio } from '@hawtio/react'
 import '@hawtio/react/dist/index.css'
-import { stack, updateCSSValues } from '../utils'
+import { stack } from '../utils'
 import './hawtiomaintab.css'
 import { log } from '../globals'
 import { ConsoleLoading } from './ConsoleLoading'
@@ -21,37 +21,6 @@ import { ConsoleLoading } from './ConsoleLoading'
  * removed from the component.
  */
 log.info(`Using base path: ${fetchPatchService.getBasePath()}`)
-
-/**
- * Define the CSS properties to update given the
- * theme that has been defined for the browser
- */
-updateCSSValues(':root',
-  {
-    /* Background colour of the hawtio header toolbar (#hawtio-header) */
-    property: '--hawtio-header--BackgroundColor',
-    value: {
-      dark: '#151515',
-      light: '#c5c4c4'
-    }
-  },
-  {
-    /* Background colour of the hawtio route diagram nodes (.react-flow__node-camel .camel-node-content) */
-    property: '--hawtio-diagram-node--BackgroundColor',
-    value: {
-      dark: '#656565',
-      light: '#efefef'
-    }
-  },
-  {
-    /* Text colour of the hawtio header toolbar plugin dropdown (#plugin-header-dropdown-toggle) */
-    property: '--hawtio-header--DropdownColor',
-    value: {
-      dark: '#ffffff',
-      light: '#000000'
-    }
-  }
-)
 
 interface HawtioMainTabProps {
   ns: string

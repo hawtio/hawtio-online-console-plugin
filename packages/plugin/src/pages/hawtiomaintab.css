@@ -1,13 +1,35 @@
 
-/**
- * Variables that can be set dynamically for css
- * - dark theme by default
- * - see helper.ts updateCSSValues()
+
+/*
+ * By default, in the light theme, define diagram variables
  */
 :root {
+  /*
+   * Background colour of the hawtio header toolbar (#hawtio-header)
+   */
+  --hawtio-header--BackgroundColor: #c5c4c4;
+
+  /*
+   * Text colour of the hawtio header toolbar plugin dropdown
+   * (#plugin-header-dropdown-toggle)
+   */
+  --hawtio-header--DropdownColor: black;
+}
+
+/*
+ * When the theme is dark override the diagram variables
+ */
+:where(.pf-v5-theme-dark):root {
+  /*
+   * Background colour of the hawtio header toolbar (#hawtio-header)
+   */
   --hawtio-header--BackgroundColor: #151515;
-  --hawtio-diagram-node--BackgroundColor: #656565;
-  --hawtio-header--DropdownColor: #000000
+
+  /*
+   * Text colour of the hawtio header toolbar plugin dropdown
+   * (#plugin-header-dropdown-toggle)
+   */
+  --hawtio-header--DropdownColor: white;
 }
 
 /*
@@ -60,16 +82,6 @@
 #plugin-header-dropdown-toggle::before {
   /* Removes blue hyperlink button border from toolbar button */
   border: none;
-}
-
-/*
- * =============================================
- * Ensures the background of the route visual
- * nodes is coloured according to browser theme
- * =============================================
- */
-.react-flow__node-camel .camel-node-content {
-  background-color: var(--hawtio-diagram-node--BackgroundColor) !important;
 }
 
 /*
