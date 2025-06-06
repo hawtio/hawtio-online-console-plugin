@@ -1,4 +1,4 @@
-FROM node:20-alpine as builder
+FROM docker.io/node:20-alpine as builder
 
 ENV PACKAGE_GATEWAY packages/gateway
 
