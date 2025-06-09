@@ -6,7 +6,7 @@ plugin:
   name: hawtio-online-console-plugin
   image:
     name: quay.io/hawtio/online-console-plugin
-#    tag: 0.1.0
+#    tag: 0.3.0-alpha1
     pullPolicy: IfNotPresent
   component: plugin
   application: hawtio-online-console-plugin
@@ -21,7 +21,7 @@ gateway:
   shortname: gateway
   image:
     name: quay.io/hawtio/online-console-plugin-gateway
-#    tag: 0.1.0
+#    tag: 0.3.0-alpha1
     pullPolicy: IfNotPresent
   component: server
   application: hawtio-online-console-plugin

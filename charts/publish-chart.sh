@@ -14,6 +14,7 @@ helm package ${CONSOLE}
 
 package=`ls ${CONSOLE}*.tgz`
 echo "Packaged ${package}"
+echo "Note: this refers to the helm chart version not the app version!!"
 
 if [ ! -f "${package}" ]; then
   echo "Error: Failed to package ${CONSOLE}"
@@ -26,6 +27,8 @@ echo "App Version: ${app_version}"
 mkdir ${PUBLISH_DIR}
 
 APP_PACKAGE="${CONSOLE}-${app_version}.tgz"
+
+echo "Moving package tar archive to ${APP_PACKAGE}"
 mv ${package} "${PUBLISH_DIR}/${APP_PACKAGE}"
 
 REPO_INDEX="hawtio-charts-index.yaml"
@@ -55,6 +58,9 @@ echo
 echo "============================================================"
 echo "="
 echo "= Packaging Completed."
+echo "="
+echo "= Check the index to ensure merge has append rather than overwritten"
+echo "="
 echo "= Navigate to ${PUBLISH_DIR}/${REPO_DIR} and commit the result."
 echo "="
 echo "============================================================"
