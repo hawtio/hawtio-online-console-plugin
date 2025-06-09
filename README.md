@@ -5,7 +5,7 @@ A dynamic plugin that integrates the [Hawtio Online](github.com/hawtio/hawtio-on
 
 ### Installation
 
-The plugin is not released. However, a development alpha version can be installed using helm from the [hawtio-charts](github.com/hawtio/hawtio-charts) repository.
+The plugin is not released. However, a development alpha version can be installed using helm from the [hawtio-charts](https://github.com/hawtio/hawtio-charts) repository.
 
 
 ### Using the plugin
