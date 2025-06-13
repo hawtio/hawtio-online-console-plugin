@@ -98,25 +98,38 @@ class ConnectionService {
     return reason || 'unknown'
   }
 
-  private jolokiaContainerSpecPort(container: Container): number {
+  private jolokiaContainerPort(container: Container): number|null {
     const ports: Array<ContainerPort> = container.ports || []
+    log.debug(`jolokiaContainerPorts identified: ${ports}`)
     const containerPort = ports.find(port => port.name === 'jolokia')
-    return containerPort?.containerPort ?? DEFAULT_JOLOKIA_PORT
+    log.debug(`jolokaiContainerPorts determined the container Port to be ${containerPort}`)
+    return containerPort?.containerPort ?? null
   }
 
+  /*
+   * Should only return those containers with a jolokia port
+   */
   private jolokiaContainers(pod: K8sPod): Array<Container> {
     if (!pod) return []
 
+    if (! this.hasJolokiaPort(pod)) return []
+
     const containers: Array<Container> = pod.spec?.containers || []
     return containers.filter(container => {
-      return this.jolokiaContainerSpecPort(container) !== null
+      return this.jolokiaContainerPort(container) !== null
     })
   }
 
   private jolokiaPort(pod: K8sPod): number {
     const ports = jsonpath.query(pod, JOLOKIA_PORT_QUERY)
-    if (!ports || ports.length === 0) return DEFAULT_JOLOKIA_PORT
-    return ports[0].containerPort || DEFAULT_JOLOKIA_PORT
+    log.debug(`jolokiaPort found ${ports} in pod`)
+    if (!ports || ports.length === 0) {
+      log.warn(`jolokiaPort could not query a port so using the default ${DEFAULT_JOLOKIA_PORT}. This might mean the pod cannot be accessed.`)
+      return DEFAULT_JOLOKIA_PORT
+    }
+
+    log.debug(`jolokiaPort determined the pod Port to be ${ports[0].containerPort}`)
+    return ports[0].containerPort ?? DEFAULT_JOLOKIA_PORT
   }
 
   private getAnnotation(pod: K8sPod, name: string, defaultValue: string): string {
@@ -154,13 +167,6 @@ class ConnectionService {
     return joinPaths(window.location.origin, path)
   }
 
-  private connectToUrl(pod: K8sPod, container: Container): URL {
-    const jolokiaPort = this.jolokiaContainerSpecPort(container)
-    const jolokiaPath = this.jolokiaPath(pod, jolokiaPort) || ''
-    const url: URL = new URL(jolokiaPath)
-    return url
-  }
-
   private connectionKeyName(pod: K8sPod, container: Container) {
     return `${pod.metadata?.namespace}-${pod.metadata?.name}-${container.name}`
   }
@@ -172,7 +178,15 @@ class ConnectionService {
     let connName = ''
     const connNames: string[] = []
     for (const container of containers) {
-      const url: URL = this.connectToUrl(pod, container)
+      const jolokiaPort = this.jolokiaContainerPort(container)
+      if (!jolokiaPort) {
+        // Should not happen since these are jolokia containers
+        log.error(`Could no longer find a jolokia port in container ${container.name} from pod ${pod.metadata?.name}`)
+        continue
+      }
+
+      const jolokiaPath = this.jolokiaPath(pod, jolokiaPort) ?? ''
+      const url: URL = new URL(jolokiaPath)
       const protocol = url.protocol.replace(':', '') as 'http' | 'https'
       const connection: Connection = {
         id: this.connectionKeyName(pod, container),
