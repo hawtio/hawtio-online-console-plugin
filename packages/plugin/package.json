@@ -1,6 +1,6 @@
 {
   "name": "@hawtio/online-console-plugin",
-  "version": "0.3.0-alpha2",
+  "version": "0.3.0-alpha3",
   "description": "Plugin for deployment in OpenShift Console",
   "author": "Hawtio developer team",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
     "webpack": "node -r ts-node/register --inspect ../../node_modules/.bin/webpack"
   },
   "devDependencies": {
-    "@hawtio/react": "1.9.6-react17.memoryrouter.dev.3",
+    "@hawtio/react": "1.9.6-react17.memoryrouter.dev.4",
     "@openshift-console/dynamic-plugin-sdk": "1.8.0",
     "@openshift-console/dynamic-plugin-sdk-webpack": "1.3.0",
     "@patternfly/patternfly": "^5.3.1",
