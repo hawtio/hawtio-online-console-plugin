@@ -187,14 +187,14 @@ JQ=$(shell command -v jq 2> /dev/null)
 endif
 
 container-builder:
-ifeq (, $(shell command -v docker 2> /dev/null))
 ifeq (, $(shell command -v podman 2> /dev/null))
+ifeq (, $(shell command -v docker 2> /dev/null))
 	$(error "No docker or podman found in PATH. Please install and re-run")
 else
-CONTAINER_BUILDER=$(shell command -v podman 2> /dev/null)
+CONTAINER_BUILDER=$(shell command -v docker 2> /dev/null)
 endif
 else
-CONTAINER_BUILDER=$(shell command -v docker 2> /dev/null)
+CONTAINER_BUILDER=$(shell command -v podman 2> /dev/null)
 endif
 
 #
@@ -308,7 +308,7 @@ license: yarn
 	yarn license
 
 .plugin-image: container-builder license
-	@echo "####### Building Hawtio Online Console Plugin image..."
+	@echo "####### Building Hawtio Online Console Plugin image... $(CONTAINER_BUILDER)"
 	$(CONTAINER_BUILDER) build -t $(CUSTOM_PLUGIN_IMAGE):$(CUSTOM_PLUGIN_VERSION) -f $(PLUGIN_DOCKERFILE) .
 
 .gateway-image: container-builder
