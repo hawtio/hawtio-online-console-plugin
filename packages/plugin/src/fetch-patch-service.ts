@@ -37,9 +37,8 @@ class FetchPatchService {
           }
         }
 
-        // Include any requestConfig headers to ensure they are retained
         let headers: Headers = {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/merge-patch+json'
         }
 
         // Required token for protected authenticated access
