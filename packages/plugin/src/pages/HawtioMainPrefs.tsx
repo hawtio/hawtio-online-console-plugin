@@ -115,7 +115,7 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = pr
         </Nav>
       </PageSection>
       <Divider />
-      <PageSection variant={PageSectionVariants.dark}>
+      <PageSection>
         {preferencesRegistry
           .getPreferences()
           .filter(prefs => {

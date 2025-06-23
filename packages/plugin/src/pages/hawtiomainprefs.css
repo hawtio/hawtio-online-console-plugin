@@ -5,5 +5,5 @@
 #hawtio-preferences,
 #hawtio-preferences main,
 #hawtio-preferences main section {
-  background-color: var(--pf-v5-global--BackgroundColor--100);
+  background-color: var(--pf-v5-global--BackgroundColor);
 }
