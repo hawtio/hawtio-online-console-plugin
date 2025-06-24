@@ -2,10 +2,18 @@ import * as fetchIntercept from 'fetch-intercept'
 import { PLUGIN_BASE_PATH } from './constants'
 import { getCSRFToken } from './utils/https'
 
-const hawtioFetchPaths = {
+type HawtioFetchPath = {
+  path?: string,
+  regex: RegExp,
+}
+
+type HawtioFetchPaths = Record<string, HawtioFetchPath>
+
+const hawtioFetchPaths: HawtioFetchPaths = {
   presetConnections: { path: 'preset-connections', regex: /\/\/preset-connections$/ },
   hawtconfig: { path: 'hawtconfig.json', regex: /hawtconfig\.json$/ },
   sessionTimeout: { path: 'auth/config/session-timeout$1', regex: /auth\/config\/session-timeout(.*)/ },
+  management: { regex: /(.*\/gateway\/management\/.*)/ } // don't want to replace just track
 }
 
 interface Headers {
@@ -31,14 +39,31 @@ class FetchPatchService {
 
     this.fetchUnregister = fetchIntercept.register({
       request: (url, requestConfig) => {
+        /*
+         * Restrict the interceptor to only intercepting
+         * hawtio management gateway urls
+         */
+        let hawtioUrl = ''
         for (const fetchPath of Object.values(hawtioFetchPaths)) {
-          if (url.match(fetchPath.regex)) {
-            url = url.replace(fetchPath.regex, `${this.basePath}/${fetchPath.path}`)
+          if (! url.match(fetchPath.regex))
+            continue
+
+          if (! fetchPath.path) {
+            hawtioUrl = url
+          } else {
+            hawtioUrl = url.replace(fetchPath.regex, `${this.basePath}/${fetchPath.path}`)
           }
+
+          break
+        }
+
+        if (hawtioUrl.length === 0) {
+          // Not a hawtio url so return without modification
+          return [url, requestConfig]
         }
 
         let headers: Headers = {
-          'Content-Type': 'application/merge-patch+json'
+          'Content-Type': 'application/json'
         }
 
         // Required token for protected authenticated access
@@ -60,7 +85,7 @@ class FetchPatchService {
         }
 
         // headers must be 2nd so that it overwrites headers property in requestConfig
-        return [url, { ...requestConfig, headers }]
+        return [hawtioUrl, { ...requestConfig, headers }]
       },
     })
   }
