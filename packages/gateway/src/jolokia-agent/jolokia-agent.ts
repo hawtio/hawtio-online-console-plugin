@@ -554,11 +554,10 @@ export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, ssl
           !error.body ? error.statusText : error.statusText + '---' + error.body,
         )
       } else if (isError(error)) {
-        let body
-        if (isObject(error.message)) body = JSON.stringify(error.message)
-        else body = `{error: "${error.message}"}`
-
-        simpleResponse = new SimpleResponse(502, body)
+        const errorPayload = {
+          error: error.message
+        }
+        simpleResponse = new SimpleResponse(502, JSON.stringify(errorPayload))
       } else {
         simpleResponse = new SimpleResponse(
           !error.status ? 502 : error.status,
