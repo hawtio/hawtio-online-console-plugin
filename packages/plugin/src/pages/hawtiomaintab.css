@@ -32,6 +32,10 @@
   --hawtio-header--DropdownColor: white;
 }
 
+#hawtio-main-page {
+  flex-grow: 1;
+}
+
 /*
  * ========================================
  * Removes the vertical double scrollbar
@@ -42,6 +46,7 @@
 .jmx-split {
   height: auto !important;
   max-height: none !important;
+  flex-grow: 1;
 }
 
 #attribute-table-with-panel {

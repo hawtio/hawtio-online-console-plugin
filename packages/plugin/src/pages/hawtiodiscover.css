@@ -2,6 +2,12 @@
   padding-bottom: 0 !important;
 }
 
+#hawtio-discover-title-section {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+}
+
 #hawtio-discover-title-section h3 {
   padding-bottom: 1em !important;
 }
