@@ -62,7 +62,7 @@
     "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typescript": "^5.4.5",
     "url": "^0.11.4",
-    "webpack": "^5.95.0",
+    "webpack": "^5.100.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.1.0",
     "webpack-merge": "^5.9.0",
