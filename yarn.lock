@@ -2012,7 +2012,7 @@ __metadata:
     url: "npm:^0.11.4"
     webpack: "npm:^5.100.2"
     webpack-cli: "npm:^5.1.4"
-    webpack-dev-server: "npm:^5.1.0"
+    webpack-dev-server: "npm:^5.2.2"
     webpack-merge: "npm:^5.9.0"
     whatwg-fetch: "npm:^3.6.20"
   peerDependencies:
@@ -9543,9 +9543,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-proxy-middleware@npm:^2.0.7":
-  version: 2.0.7
-  resolution: "http-proxy-middleware@npm:2.0.7"
+"http-proxy-middleware@npm:^2.0.9":
+  version: 2.0.9
+  resolution: "http-proxy-middleware@npm:2.0.9"
   dependencies:
     "@types/http-proxy": "npm:^1.17.8"
     http-proxy: "npm:^1.18.1"
@@ -9557,7 +9557,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/express":
       optional: true
-  checksum: 10/4a51bf612b752ad945701995c1c029e9501c97e7224c0cf3f8bf6d48d172d6a8f2b57c20fec469534fdcac3aa8a6f332224a33c6b0d7f387aa2cfff9b67216fd
+  checksum: 10/4ece416a91d52e96f8136c5f4abfbf7ac2f39becbad21fa8b158a12d7e7d8f808287ff1ae342b903fd1f15f2249dee87fabc09e1f0e73106b83331c496d67660
   languageName: node
   linkType: hard
 
@@ -17218,13 +17218,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack-dev-server@npm:^5.1.0":
-  version: 5.2.0
-  resolution: "webpack-dev-server@npm:5.2.0"
+"webpack-dev-server@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "webpack-dev-server@npm:5.2.2"
   dependencies:
     "@types/bonjour": "npm:^3.5.13"
     "@types/connect-history-api-fallback": "npm:^1.5.4"
     "@types/express": "npm:^4.17.21"
+    "@types/express-serve-static-core": "npm:^4.17.21"
     "@types/serve-index": "npm:^1.9.4"
     "@types/serve-static": "npm:^1.15.5"
     "@types/sockjs": "npm:^0.3.36"
@@ -17237,7 +17238,7 @@ __metadata:
     connect-history-api-fallback: "npm:^2.0.0"
     express: "npm:^4.21.2"
     graceful-fs: "npm:^4.2.6"
-    http-proxy-middleware: "npm:^2.0.7"
+    http-proxy-middleware: "npm:^2.0.9"
     ipaddr.js: "npm:^2.1.0"
     launch-editor: "npm:^2.6.1"
     open: "npm:^10.0.3"
@@ -17258,7 +17259,7 @@ __metadata:
       optional: true
   bin:
     webpack-dev-server: bin/webpack-dev-server.js
-  checksum: 10/f93ca46b037e547a9db157db72ef98ab177659ad13a6e63302d87bd77b32e524dd7133f1ad18f5a51ec68712911c59be8d4e06aa7bcbe6f56a9e9ce3774cf7f6
+  checksum: 10/59517409cd38c01a875a03b9658f3d20d492b5b8bead9ded4a0f3d33e6857daf2d352fe89f0181dcaea6d0fbe84b0494cb4750a87120fe81cdbb3c32b499451c
   languageName: node
   linkType: hard
 
