@@ -6,6 +6,11 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
 const path = require('path')
 const { dependencies } = require('./package.json')
 
+// Correctly resolve the thumbmarkjs dependency
+const thmarkCjsPath = require.resolve('@thumbmarkjs/thumbmarkjs')
+const thmarkDistDir = path.dirname(thmarkCjsPath)
+const thmarkEsmPath = path.join(thmarkDistDir, 'thumbmark.esm.js')
+
 const common = (mode, publicPath, env) => {
   // hawtio-online-console-plugin
   const pluginName = env.PLUGIN_NAME.replace('@', '').replace('/', '-')
@@ -129,6 +134,12 @@ const common = (mode, publicPath, env) => {
       chunkFilename: mode === 'production' ? '[name]-chunk-[chunkhash].min.js' : '[name]-chunk.js',
     },
     resolve: {
+      alias: {
+        // This tells Webpack:
+        // Anytime code tries to import '@thumbmarkjs/thumbmarkjs', use this specific
+        // file instead of trying to figure it out yourself.
+        '@thumbmarkjs/thumbmarkjs': thmarkEsmPath
+      },
       modules: ['node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx'],
       plugins: [
