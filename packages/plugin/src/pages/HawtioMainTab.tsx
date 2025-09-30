@@ -9,7 +9,7 @@ import { Alert, Card, CardBody, PageSection, PageSectionVariants } from '@patter
 import '@patternfly/patternfly/patternfly.css'
 import { K8sPod } from '../types'
 import { hawtioService } from '../hawtio-service'
-import { Hawtio } from '@hawtio/react'
+import { Hawtio } from '@hawtio/react/ui'
 import '@hawtio/react/dist/index.css'
 import { stack } from '../utils'
 import './hawtiomaintab.css'

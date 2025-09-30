@@ -6,7 +6,8 @@
 import { fetchPatchService } from '../fetch-patch-service'
 import React, { useEffect, useState } from 'react'
 import { hawtioService } from '../hawtio-service'
-import { HawtioLoadingPage, preferencesRegistry } from '@hawtio/react'
+import { preferencesRegistry } from '@hawtio/react'
+import { HawtioLoadingPage } from '@hawtio/react/ui'
 import '@hawtio/react/dist/index.css'
 import { log } from '../globals'
 import {

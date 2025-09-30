@@ -12,6 +12,7 @@ import {
   ResolveUser,
   runtime,
   springboot,
+  UserAuthResult,
   userService,
   workspace,
 } from '@hawtio/react'
@@ -20,6 +21,10 @@ import { log } from './globals'
 import { K8sPod } from './types'
 import { connectionService } from './connection-service'
 import { pluginHeaderDropdown, pluginHeaderDropdownId } from './plugins'
+import { Logger } from '@hawtio/react'
+
+const USER = 'auth-disabled'
+const AUTH_METHOD = 'NoAuth'
 
 class HawtioService {
   private initialized?: boolean = false
@@ -31,12 +36,12 @@ class HawtioService {
      * Disable the authentication requirements by specifying
      * a user that is already logged-in
      */
-    userService.addFetchUserHook('auth-disabled', this.fetchUser)
+    userService.addFetchUserHook(USER, this.fetchUser)
   }
 
-  private async fetchUser(resolve: ResolveUser): Promise<boolean> {
-    resolve({ username: 'auth-disabled', isLogin: true, isLoading: false })
-    return true
+  private async fetchUser(resolve: ResolveUser): Promise<UserAuthResult> {
+    resolve({ username: USER, isLogin: true, loginMethod: AUTH_METHOD })
+    return { isIgnore: false, isError: false, loginMethod: AUTH_METHOD }
   }
 
   private async establishConnection(pod: K8sPod): Promise<boolean> {
@@ -118,6 +123,7 @@ class HawtioService {
      */
 
     const pluginIds = hawtio.getPlugins().map(plugin => plugin.id)
+    log.debug('(hawtio-service) Current plugin ids according to hawtio: ', pluginIds)
 
     // Register or refresh Hawtio plugins
     await this.initPlugin(pluginIds, 'consolestatus', consoleStatus)
@@ -130,17 +136,22 @@ class HawtioService {
     await this.initPlugin(pluginIds, pluginHeaderDropdownId, pluginHeaderDropdown)
 
     // Reset the jolokia service
+    log.debug('(hawtio-service) Resetting jolokia Service ...')
     jolokiaService.reset()
 
     // Have a connection so reset the workspace
+    log.debug('(hawtio-service) Refreshing workspace tree ...')
     await workspace.refreshTree()
     const tree = await workspace.getTree()
     log.debug(`Contents of tree ${tree.getTree().length}`)
 
     // Bootstrap Hawtio
-    log.debug('(hawtio-service) Bootstrapping hawtio ...')
-    await hawtio.bootstrap()
+    log.debug(`(hawtio-service) Bootstrapping hawtio (${pluginIds.length === 0 ? 'true' : 'false'}) ...`)
+    if (pluginIds.length === 0) {
+      await hawtio.bootstrap()
+    }
 
+    log.debug('(hawtio-service) Resolving the hawtio service')
     await this.resolve()
   }
 
