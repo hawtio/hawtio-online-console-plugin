@@ -82,6 +82,6 @@
   "resolutions": {
     "@types/react": "^17.0.37",
     "@monaco-editor/react": "4.7.0",
-    "@thumbmarkjs/thumbmarkjs": "0.20.5"
+    "webpack": "^5.100.2"
   }
 }
