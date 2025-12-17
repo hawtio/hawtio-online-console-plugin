@@ -14,7 +14,7 @@ process.env.LOG_LEVEL = 'trace'
 import request from 'supertest'
 import path from 'path'
 import { CLUSTER_BASE_ADDRESS, CLUSTER_HOST, CLUSTER_PORT, runningClusterServer, jolokiaUri, testData } from './testing'
-import { enableRbac, isOptimisedCachedDomains, setClusterAddr } from './jolokia-agent'
+import { processRBACEnvVar, isOptimisedCachedDomains, setClusterAddr } from './jolokia-agent'
 import { cloneObject } from './utils'
 
 process.env['HAWTIO_ONLINE_GATEWAY_APP_PORT'] = '11443'
@@ -83,12 +83,6 @@ afterAll(done => {
 })
 
 beforeEach(() => {
-  // Reset TestOptions
-  testData.authorization.forbidden = false
-  testData.authorization.adminAllowed = true
-  testData.authorization.viewerAllowed = true
-  enableRbac(true)
-
   /*
    * Override jolokia URI components so that the final
    * jolokia request is circled back to the cluster test server
@@ -108,27 +102,36 @@ function appPost(uri: string, body: Record<string, unknown> | Record<string, unk
     .set('Content-Security-Policy', "default-src 'self'; frame-ancestors 'self'; form-action 'self'; ")
 }
 
+// Defined by jest env vars in .jestEnvVars.js
+const defaultACLFile = `${process.env.HAWTIO_ONLINE_RBAC_ACL}`
+
 describe.each([
   { title: 'proxyJolokiaAgentWithoutRbac', rbac: false },
   { title: 'proxyJolokiaAgentWithRbac', rbac: true },
 ])('$title', ({ title, rbac }) => {
   const testAuth = rbac ? 'RBAC Enabled' : 'RBAC Disabled'
 
+  beforeEach(() => {
+    // Reset TestOptions
+    testData.authorization.forbidden = false
+    testData.authorization.adminAllowed = true
+    testData.authorization.viewerAllowed = true
+    if (rbac) processRBACEnvVar(defaultACLFile)
+    else processRBACEnvVar(defaultACLFile, 'disabled')
+  })
+
   it(`${testAuth}: Bare path`, async () => {
-    enableRbac(rbac)
     const path = '/management/'
     return appPost(path, testData.jolokia.search.request).expect(404)
   })
 
   it(`${testAuth}: Authorization forbidden`, async () => {
-    enableRbac(rbac)
     testData.authorization.forbidden = true
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.search.request).expect(403)
   })
 
   it(`${testAuth}: Authorization not allowed`, async () => {
-    enableRbac(rbac)
     testData.authorization.adminAllowed = false
     testData.authorization.viewerAllowed = false
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
@@ -140,7 +143,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post search`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.search.request)
       .expect(200)
@@ -150,7 +152,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post registerList`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.registerList.request)
       .expect(200)
@@ -173,7 +174,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post canInvokeMap`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.canInvokeMap.request)
       .expect(200)
@@ -190,7 +190,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post canInvokeSingleAttribute`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.canInvokeSingleAttribute.request)
       .expect(200)
@@ -207,7 +206,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post canInvokeSingleOperation`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.canInvokeSingleOperation.request)
       .expect(200)
@@ -224,7 +222,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post bulkRequestWithInterception`, async () => {
-    enableRbac(rbac)
     const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
     return appPost(path, testData.jolokia.bulkRequestWithInterception.request)
       .expect(200)
@@ -241,9 +238,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post operationWithArgumentsAndViewerRoleOnly`, async () => {
-    // RBAC enabled depending on test suite
-    enableRbac(rbac)
-
     // Only viewer role allowed
     testData.authorization.adminAllowed = false
     testData.authorization.viewerAllowed = true
@@ -265,8 +259,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post bulkRequestWithViewerRole`, async () => {
-    enableRbac(rbac)
-
     // Only viewer role allowed
     testData.authorization.adminAllowed = false
     testData.authorization.viewerAllowed = true
@@ -286,9 +278,6 @@ describe.each([
   })
 
   it(`${testAuth}: Authorization Post requestOperationWithArgumentsAndNoRole`, async () => {
-    // RBAC enabled depending on test suite
-    enableRbac(rbac)
-
     // No role allowed
     testData.authorization.adminAllowed = false
     testData.authorization.viewerAllowed = false

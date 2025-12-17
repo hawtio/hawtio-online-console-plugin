@@ -88,9 +88,9 @@ gatewayServer.use(
     },
     contentSecurityPolicy: {
       directives: {
-        'default-src': 'self',
-        'frame-ancestors': 'self',
-        'form-action': 'self',
+        'default-src': '"self"',
+        'frame-ancestors': '"self"',
+        'form-action': '"self"',
       },
     },
   }),
