@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "@hawtio/react": "1.10.2-react17.memoryrouter.dev.1",
-    "@openshift-console/dynamic-plugin-sdk": "1.8.0",
-    "@openshift-console/dynamic-plugin-sdk-webpack": "1.3.0",
+    "@openshift-console/dynamic-plugin-sdk": "4.20.0",
+    "@openshift-console/dynamic-plugin-sdk-webpack": "4.20.0",
     "@patternfly/patternfly": "^5.3.1",
     "@patternfly/react-charts": "^7.4.9",
     "@patternfly/react-code-editor": "^5.4.18",
