@@ -56,6 +56,8 @@ GATEWAY := gateway
 PLUGIN := plugin
 GATEWAY_ROUTE := gateway-route
 
+MASK_IP_ADDRESSES_PATCH := $(PATCHES)/patch-mask-ip-addresses.yml
+
 #
 # =======================
 # Override-able Variables
@@ -78,6 +80,8 @@ DRY_RUN ?= false
 NAMESPACE ?= hawtio-online
 # Uninstall all hawtio-onlineresources: [true|false]
 UNINSTALL_ALL ?=false
+# Whether to mask ip addresses in network responses
+MASK_IP_ADDRESSES ?= false
 
 #
 # =======================
@@ -366,6 +370,14 @@ image-push: .plugin-image-push .gateway-image-push
 generate-proxying: check-admin
 	NAMESPACE=$(NAMESPACE) ./scripts/generate-proxying.sh
 
+.mask-ip-addresses:
+ifeq ($(MASK_IP_ADDRESSES), true)
+	echo "HELLO $(MASK_IP_ADDRESSES)"
+	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),add,../../$(MASK_IP_ADDRESSES_PATCH),Deployment)
+else
+	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),remove,../../$(MASK_IP_ADDRESSES_PATCH),Deployment)
+endif
+
 #---
 #
 #@ install-gateway
@@ -389,6 +401,8 @@ install-gateway: kustomize kubectl jq
 	@$(call set-kustomize-namespace,$(BASE)/$(GATEWAY))
 # Set the image references of the kustomization
 	@$(call set-kustomize-gateway-image,$(BASE)/$(GATEWAY))
+# Mask IP addresses if required
+	@$(MAKE) .mask-ip-addresses
 #
 # Build the resources
 # Either apply to the cluster or output to CLI

@@ -1,0 +1,17 @@
+#
+# Patch to update the deployment to mask ip addresses
+# only if the user specifically requires.
+# The default is not to mask them.
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hawtio-online-console-plugin-gateway
+spec:
+  template:
+    spec:
+      containers:
+        - name: hawtio-online-console-plugin-gateway
+          env:
+            - name: HAWTIO_ONLINE_MASK_IP_ADDRESSES
+              value: "true"

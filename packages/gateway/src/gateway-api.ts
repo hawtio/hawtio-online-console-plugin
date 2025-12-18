@@ -69,8 +69,8 @@ logger.info(`* Log Level:         ${logger.level}`)
 logger.info(`* SSL Enabled:       ${sslCertificate !== ''}`)
 logger.info(`* Proxy SSL Enabled: ${sslProxyCertificate !== ''}`)
 logger.info(`* Cluster Address:   ${getClusterAddr()}`)
-logger.info(`* RBAC:              ${process.env['HAWTIO_ONLINE_RBAC_ACL'] || 'default'}`)
-logger.info(`* Mask IP Addresses: ${process.env['HAWTIO_ONLINE_MASK_IP_ADDRESSES'] || 'true'}`)
+logger.info(`* RBAC:              ${process.env['HAWTIO_ONLINE_RBAC_ACL'] ?? 'default'}`)
+logger.info(`* Mask IP Addresses: ${process.env['HAWTIO_ONLINE_MASK_IP_ADDRESSES'] ?? 'false'}`)
 logger.info('**************************************')
 
 // Log middleware requests

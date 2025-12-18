@@ -36,7 +36,7 @@ gateway:
   log:
     level: info
     # Mask IP addresses in application responses [ true | false ]
-    maskIPAddresses: true
+    maskIPAddresses: false
   service:
     port: 8443
 
