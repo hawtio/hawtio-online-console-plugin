@@ -2,11 +2,13 @@ import { MenuToggle, MenuToggleElement, Page, PageSection, Select, SelectList, S
 import { CubesIcon } from '@patternfly/react-icons'
 import { k8sListItems, K8sModel, K8sResourceCommon, NamespaceBar, useActiveNamespace, useK8sModel } from '@openshift-console/dynamic-plugin-sdk'
 import { Ref, useEffect, useState } from 'react'
+import './openshift-console-plugin.css'
+import './hawtiodiscover.css'
+import { useOpenShiftTheme } from '../hooks'
 import { K8sNamespace, K8sPod } from '../types'
 import { ConsoleLoading } from './ConsoleLoading'
-import './hawtiodiscover.css'
 import { HawtioMainTab } from './HawtioMainTab'
-import { connectionService } from 'src/connection-service'
+import { connectionService } from '../connection-service'
 import { DiscoverEmptyContent } from './DiscoverEmptyContent'
 
 interface HawtioDiscoverProps {
@@ -55,6 +57,9 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
   /* Select Pod Dropdown */
   const [isPodSelectOpen, setPodSelectIsOpen] = useState<boolean>(false)
   const [selectedPod, setSelectedPod] = useState<string>(noPods)
+
+  // Ensure the correct theme for OpenShift version
+  useOpenShiftTheme()
 
   useEffect(() => {
     setLoading(true)

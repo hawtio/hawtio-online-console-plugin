@@ -1,15 +1,21 @@
 #hawtio-discover-namespace-section {
   padding-bottom: 0 !important;
+  background-color: var(--hawtio-header--BackgroundColor);
+}
+
+#hawtio-discover-namespace-section .co-namespace-bar {
+  padding-left: 0 !important;
 }
 
 #hawtio-discover-title-section {
   display: flex;
   flex-grow: 1;
   flex-direction: column;
+  background-color: var(--hawtio-header--BackgroundColor);
 }
 
 #hawtio-discover-title-section h3 {
-  padding-bottom: 1em !important;
+  padding-bottom: 0.25em !important;
 }
 
 .pod-select-dropdown-toggle {

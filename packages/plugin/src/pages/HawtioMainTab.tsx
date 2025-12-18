@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Card, CardBody, PageSection, PageSectionVariants } from '@patternfly/react-core'
 import '@patternfly/patternfly/patternfly.css'
+import { useOpenShiftTheme } from '../hooks'
 import { K8sPod } from '../types'
 import { hawtioService } from '../hawtio-service'
 import { Hawtio } from '@hawtio/react/ui'
 import '@hawtio/react/dist/index.css'
-import { stack } from '../utils'
+import './openshift-console-plugin.css'
 import './hawtiomaintab.css'
+import { stack } from '../utils'
 import { log } from '../globals'
 import { ConsoleLoading } from './ConsoleLoading'
 
@@ -26,6 +28,9 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
   const [isLoading, setLoading] = useState<boolean>(true)
   const podIdRef = useRef<string|null>(podUid(props.obj))
   const [error, setError] = useState<Error | null>()
+
+  // Ensure the correct theme for OpenShift version
+  useOpenShiftTheme()
 
   useEffect(() => {
     const newId = podUid(props.obj) ?? ''

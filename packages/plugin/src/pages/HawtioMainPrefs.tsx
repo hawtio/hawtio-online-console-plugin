@@ -17,8 +17,10 @@ import {
   PageSectionVariants,
 } from '@patternfly/react-core'
 import '@patternfly/patternfly/patternfly.css'
-import { stack } from '../utils'
+import './openshift-console-plugin.css'
 import './hawtiomainprefs.css'
+import { useOpenShiftTheme } from '../hooks'
+import { stack } from '../utils'
 
 interface HawtioMainPrefsProps {
   id: string
@@ -28,6 +30,9 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = pr
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>()
   const [prefsPageId, setPrefsPageId] = useState<string>('')
+
+  // Ensure the correct theme for OpenShift version
+  useOpenShiftTheme()
 
   useEffect(() => {
     if (isLoading) {

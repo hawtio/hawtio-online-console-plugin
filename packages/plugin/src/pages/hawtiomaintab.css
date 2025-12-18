@@ -1,39 +1,30 @@
-
-
 /*
- * By default, in the light theme, define diagram variables
+ * ===========================================
+ * Modifies appearance of the main page
+ * ===========================================
  */
-:root {
-  /*
-   * Background colour of the hawtio header toolbar (#hawtio-header)
-   */
-  --hawtio-header--BackgroundColor: #c5c4c4;
-
-  /*
-   * Text colour of the hawtio header toolbar plugin dropdown
-   * (#plugin-header-dropdown-toggle)
-   */
-  --hawtio-header--DropdownColor: black;
-}
-
-/*
- * When the theme is dark override the diagram variables
- */
-:where(.pf-v5-theme-dark):root {
-  /*
-   * Background colour of the hawtio header toolbar (#hawtio-header)
-   */
-  --hawtio-header--BackgroundColor: #151515;
-
-  /*
-   * Text colour of the hawtio header toolbar plugin dropdown
-   * (#plugin-header-dropdown-toggle)
-   */
-  --hawtio-header--DropdownColor: white;
-}
-
 #hawtio-main-page {
   flex-grow: 1;
+
+  /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
+  background-color: var(--hawtio-page-BackgroundColor) !important;
+
+  /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
+  --pf-v5-c-page--BackgroundColor: var(--hawtio-page--BackgroundColor) !important;
+
+  --pf-v5-c-page__main-section--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+
+  /*
+   * If a react component has variant="light", this adds the .pf-m-light class.
+   * This class forces the background to use the '--m-light--BackgroundColor' variable,
+   * even if the theme is dark.
+   * Override that variable here to point to hawtio's custom section color that observes the theme.
+   */
+  --pf-v5-c-page__main-section--m-light--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+
+  --pf-v5-c-page__main-tabs--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+  --pf-v5-c-tabs__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+  --pf-v5-c-tabs--m-box__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
 }
 
 /*
@@ -59,6 +50,9 @@
  * ===========================================
  */
 #hawtio-header {
+  /*
+   * Patternfly 5
+   */
   --pf-v5-global--target-size--MinHeight: 2rem;
   --pf-v5-global--height-breakpoint--xl: 2rem;
   --pf-v5-global--height-breakpoint--md: 2rem;
@@ -71,8 +65,29 @@
   /* Removes the padding */
   --pf-v5-c-masthead--PaddingRight: 0;
   --pf-v5-c-masthead--PaddingLeft: 0;
-  /* Sets the background colour according to the theme of the browser */
-  --pf-v5-c-masthead--BackgroundColor: var(--hawtio-header--BackgroundColor) !important;
+
+  /* Apply calculated variable to the PF5 masthead component */
+  --pf-v5-c-masthead--BackgroundColor: var(--hawtio-masthead--BackgroundColor) !important;
+
+  /*
+   * Patternfly 6
+   */
+  --pf-v6-global--target-size--MinHeight: 2rem;
+  --pf-v6-global--height-breakpoint--xl: 2rem;
+  --pf-v6-global--height-breakpoint--md: 2rem;
+  --pf-v6-global--height-breakpoint--lg: 2rem;
+  --pf-v6-global--height-breakpoint--2xl: 2rem;
+  --pf-v6-c-page__header--MinHeight: 2rem;
+  --pf-v6-c-masthead__main--MinHeight: 2rem;
+  --pf-v6-c-masthead__content--MinHeight: 2rem;
+  --pf-v6-c-masthead--m-display-stack__main--MinHeight: 2rem;
+  /* Removes the padding */
+  --pf-v6-c-masthead--PaddingRight: 0;
+  --pf-v6-c-masthead--PaddingLeft: 0;
+
+  /* Apply calculated variable to the PF6 masthead component */
+  --pf-v6-c-masthead--BackgroundColor: var(--hawtio-masthead--BackgroundColor) !important;
+
   /* Adds bottom border */
   border-bottom-color: lightgrey;
   border-bottom-width: thin;
@@ -96,7 +111,22 @@
  * ========================================
  */
 .gutter {
-  background-color: var(--pf-c-page--BackgroundColor) !important;
+  /* Tries PF6 and fallback to PF5 */
+  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
+  border-left-color: lightgrey;
+  border-left-style: solid;
+  border-left-width: 1px;
+}
+
+/*
+ * The treeview lacks a background of its own so
+ * by default inherits the #hawtio-main-page (too dark in dark mode)
+ * Set the surrounding div of the treeview to the same as the treeview
+ */
+#hawtio-main-page div,
+#camel-tree-view,
+#jmx-tree-view {
+  background-color: var(--hawtio-treeview--BackgroundColor);
 }
 
 /*
@@ -107,9 +137,38 @@
  */
 #camel-tree-view .pf-v5-c-tree-view__node-toggle,
 #camel-tree-view .pf-v5-c-tree-view__node-text,
-#jmx-tree-view .pf-v5-c-tree-view__node-toggle,
-#jmx-tree-view .pf-v5-c-tree-view__node-text {
+#jmx-tree-view   .pf-v5-c-tree-view__node-toggle,
+#jmx-tree-view   .pf-v5-c-tree-view__node-text,
+#camel-tree-view .pf-v6-c-tree-view__node-toggle,
+#camel-tree-view .pf-v6-c-tree-view__node-text,
+#jmx-tree-view   .pf-v6-c-tree-view__node-toggle,
+#jmx-tree-view   .pf-v6-c-tree-view__node-text {
   border-color: transparent !important;
+}
+
+#jmx-content-header,
+#camel-content-header {
+  padding-top: 0.5em !important;
+  padding-bottom: 0.5em !important;
+}
+
+/*
+ * ========================================
+ * Get the background color from the
+ * underlying masthead rather than painting
+ * the toolbar
+ * ========================================
+ */
+#hawtio-header-toolbar {
+  background-color: transparent !important;
+}
+
+/*
+ * Control the theming of the icons to ensure
+ * they show up in both dark and light modes
+ */
+#hawtio-header-toolbar svg {
+  color: var(--hawtio-header--DropdownColor) !important;
 }
 
 /*
@@ -119,9 +178,12 @@
  * ========================================
  */
 .monaco-editor-background {
-  background-color: var(--pf-c-page--BackgroundColor);
+  /* Tries PF6 and fallback to PF5 */
+  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
+
 }
 
 .monaco-editor .margin {
-  background-color: var(--pf-c-page--BackgroundColor);
+  /* Tries PF6 and fallback to PF5 */
+  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
 }

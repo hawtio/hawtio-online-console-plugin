@@ -1,0 +1,115 @@
+/* -------------------------------------------------------------------------
+ * USE-CASE 1: PF5 DEFAULT (OpenShift 4.15 - 4.18)
+ * -------------------------------------------------------------------------
+ * Fallback when no .hawtio-pf6-mode class is present.
+ */
+:root {
+  /* * PF5 Light Mode uses a grey background for the main section.
+   * We map to the '200' global background variable (Light Grey).
+   */
+  --hawtio-header--BackgroundColor: var(--pf-v5-global--BackgroundColor--200, #f0f0f0);
+
+  /* Standard text color (Black) */
+  --hawtio-header--DropdownColor: var(--pf-v5-global--Color--100, #151515);
+
+  /*
+   * Page background color
+   */
+  --hawtio-page--BackgroundColor: var(--pf-v5-global--BackgroundColor--200, #f0f0f0);
+
+  /*
+   * Masthead background color.
+   * The default for a masthead in light theme is black in PF5. Since this masthead is
+   * embedded in the app it should not be so prominent so make it light grey instead.
+   */
+  --hawtio-masthead--BackgroundColor: #c5c4c4;
+
+  /*
+   * Section, Tabs. Treeview
+   * Use the GLOBAL variable (parent), not the component variable.
+   * Sets the value to standard White (#ffffff)
+   */
+  --hawtio-section--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #ffffff);
+  --hawtio-tabs--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #ffffff);
+  --hawtio-treeview--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #ffffff);
+}
+
+/* -------------------------------------------------------------------------
+ * USE-CASE 2: PF5 DARK (OpenShift 4.15 - 4.18)
+ * -------------------------------------------------------------------------
+ * PF5 separates dark variables explicitly.
+ */
+:where(.pf-v5-theme-dark):root {
+  /* PF5 Dark Mode uses a specific 'dark-100' variable (Deep Black).*/
+  --hawtio-header--BackgroundColor: var(--pf-v5-global--BackgroundColor--dark-100, #151515);
+
+  /* Text color becomes white in dark mode context */
+  --hawtio-header--DropdownColor: var(--pf-v5-global--Color--100, #ffffff);
+
+  /*
+   * Page background color
+   */
+  --hawtio-page--BackgroundColor: var(--pf-v5-global--BackgroundColor--dark-100, #151515);
+
+  /*
+   * Masthead background color (nearly black)
+   * Use the global var that pf5 masthead points to since
+   * the pf5 masthead var is overridden by this var (avoid cycle).
+   */
+  --hawtio-masthead--BackgroundColor: var(--pf-v5-global--BackgroundColor--dark-100, #151515);
+
+  /*
+   * Section, Tabs, Treeview
+   * Global variable resolves to Dark Grey/Black in dark mode.
+   * Sets to standard PF5 dark look.
+   */
+  --hawtio-section--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #151515);
+  --hawtio-tabs--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #151515);
+  --hawtio-treeview--BackgroundColor: var(--pf-v5-global--BackgroundColor--100, #151515);
+}
+
+/* -------------------------------------------------------------------------
+ * USE-CASE 3 & 4: PF6 (OpenShift 4.19+)
+ * -------------------------------------------------------------------------
+ * PF6 handles light/dark swapping AUTOMATICALLY within its own variables.
+ */
+.hawtio-pf6-mode:root {
+  /* In PF6, '--pf-t--global--background--color--primary--default' is dynamic:
+   * - Light Mode: Resolves to White (#ffffff)
+   * - Dark Mode:  Resolves to Soft Dark Grey (#292929) automatically
+   */
+  --hawtio-header--BackgroundColor: var(--pf-t--global--background--color--primary--default, #ffffff);
+
+  /* Color--100 automatically flips from Black to White */
+  --hawtio-header--DropdownColor: var(--pf-t--global--text--color--regular, #151515);
+
+  /*
+   * Page background color
+   */
+  --hawtio-page-BackgroundColor: var(--pf-t--global--background--color--secondary--default, #f0f0f0);
+
+  /*
+   * Masthead background color
+   * Map to the token color that masthead component depends on in PF6
+   * and which automatically handles Light (Grey) vs Dark (Black) modes.
+   */
+  --hawtio-masthead--BackgroundColor: var(--pf-t--global--background--color--secondary--default, #f2f2f2);
+
+  /*
+   * Section and Tabs
+   * Map to the PF6 Semantic Token.
+   * Forces PF5 sections to look like PF6 sections if the sections
+   * themselves are still rendered using PF5
+   */
+  --hawtio-section--BackgroundColor: var(--pf-t--global--background--color--primary--default, #ffffff);
+  --hawtio-tabs--BackgroundColor: var(--pf-t--global--background--color--primary--default, #ffffff);
+  --hawtio-treeview--BackgroundColor: var(--pf-t--global--background--color--primary--default, #ffffff);
+}
+
+/*
+ * Completely remove the PatternFly BackgroundImage component
+ * when running inside the OpenShift Console.
+ */
+.pf-v5-c-background-image {
+  display: none !important;
+}
