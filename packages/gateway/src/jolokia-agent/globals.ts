@@ -121,6 +121,8 @@ export function setClusterAddr(address: string) {
 }
 
 export function isSimpleResponse(obj: unknown): obj is SimpleResponse {
+  if (!obj) return false
+
   return (
     (obj as SimpleResponse).status !== undefined &&
     (obj as SimpleResponse).body !== undefined &&
@@ -129,6 +131,8 @@ export function isSimpleResponse(obj: unknown): obj is SimpleResponse {
 }
 
 export function isResponse(obj: unknown): obj is Response {
+  if (!obj) return false
+
   return (
     (obj as Response).status !== undefined &&
     (obj as Response).statusText !== undefined &&

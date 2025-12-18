@@ -1,6 +1,6 @@
 import yaml from 'yaml'
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
-import fetch from 'node-fetch'
+import fetch, {Response as FetchResponse} from 'node-fetch'
 import { jwtDecode } from 'jwt-decode'
 import * as fs from 'fs'
 import https from 'https'
@@ -17,13 +17,35 @@ import {
   toFetchHeaders,
   isMBeanRequest,
   isMBeanRequestArray,
-  isResponse,
   isSimpleResponse,
   fromFetchHeaders,
 } from './globals'
 import * as RBAC from './rbac'
 
 const DEFAULT_ACL_FILE_PATH = `${__dirname}/ACL.yaml`
+
+class SimpleResponseError extends Error {
+  response: SimpleResponse
+
+  constructor(response: SimpleResponse) {
+    super(response.body)
+    this.name = 'SimpleResponseError'
+    this.response = response
+  }
+}
+
+export function isSimpleResponseError(obj: unknown): obj is SimpleResponseError {
+  return (
+    (obj as SimpleResponseError).name === 'SimpleResponseError' &&
+    isSimpleResponse((obj as SimpleResponseError).response)
+  )
+}
+
+function isConnectionErrorHtml(text: string): boolean {
+  if (!text || text.length === 0) return false
+  return text.includes('<div>') && text.includes('A connection error occurred') && text.includes('</div>')
+}
+
 
 function initRBACFile(rbacFilePath: string) {
   let aclFile
@@ -108,21 +130,58 @@ function response(agentInfo: AgentInfo, res: SimpleResponse) {
    */
   agentInfo.response.setHeader('content-type', 'application/json')
 
+  logger.trace(`Masking IP address for response body ${res.body}`)
   const maskedResponse = maskIPAddresses(res.body)
 
   agentInfo.response.status(res.status).send(maskedResponse)
 }
 
-function reject(status: number, body: Record<string, string>): Promise<SimpleResponse> {
+function reject(status: number, body: Record<string, string>): SimpleResponseError {
   logger.trace('(jolokia-agent) reject ...')
 
-  return Promise.reject({
-    status: status,
-    body: body,
-    headers: new Headers({
-      'Content-Type': 'application/json',
-    }),
-  })
+  return new SimpleResponseError(
+    new SimpleResponse(
+      status,
+      JSON.stringify(body),
+      new Headers({
+        'Content-Type': 'application/json',
+      })
+    ),
+  )
+}
+
+async function rejectResponse(response: FetchResponse): Promise<SimpleResponseError> {
+  logger.trace('(jolokia-agent) reject response ...')
+  let body: string
+
+  // Create a clone of the response. We will use this for the fallback.
+  const responseClone = response.clone()
+  try {
+    const json = await response.json()
+    body = JSON.stringify(json)
+  if (body === '{}') body = '' // make body empty as effectively useless as empty json
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    body = await responseClone.text()
+    if (isConnectionErrorHtml(body)) {
+      // no need to record all the html, just retain the main message
+      body = 'A connection error occurred.'
+    }
+  }
+
+  if (!response.statusText) {
+    body = `An error has occurred with no status text. ${body}`
+  } else {
+    body = `${response.statusText}. ${body}`
+  }
+
+  return new SimpleResponseError(
+    new SimpleResponse(
+      response.status,
+      JSON.stringify({ error: body }),
+      new Headers(),
+    )
+  )
 }
 
 function getSubjectFromJwt(agentInfo: AgentInfo): string | undefined {
@@ -188,7 +247,7 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
 
   logger.trace(`(jolokia-agent) Verifying authorization at uri ${authUri}`)
 
-  const response = await fetch(authUri, {
+  const fetchResponse = await fetch(authUri, {
     method: 'POST',
     body: json,
     headers: toFetchHeaders(agentInfo.requestHeaders),
@@ -199,23 +258,19 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
     }),
   })
 
-  if (!response.ok) {
-    logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${response.status})`)
-    return new SimpleResponse(
-      response.status,
-      JSON.stringify({ message: response.statusText }),
-      fromFetchHeaders(response.headers),
-    )
+  if (!fetchResponse.ok) {
+    logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${fetchResponse.status})`)
+    throw await rejectResponse(fetchResponse)
   }
 
-  const data = await response.json()
+  const data = await fetchResponse.json()
   const sar = isObject(data) ? data : JSON.parse(data as string)
 
   logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview sar: (${printObject(sar)})`)
   return new SimpleResponse(
-    response.status,
+    fetchResponse.status,
     (useForm ? sar.status.allowed : sar.allowed).toString(),
-    fromFetchHeaders(response.headers),
+    fromFetchHeaders(fetchResponse.headers),
   )
 }
 
@@ -227,7 +282,7 @@ async function getPodIP(agentInfo: AgentInfo): Promise<string> {
 
   logger.trace(`(jolokia-agent) Getting pod ip from uri ${podIPUri}`)
 
-  const res = await fetch(podIPUri, {
+  const fetchResponse = await fetch(podIPUri, {
     method: 'GET',
     headers: toFetchHeaders(agentInfo.requestHeaders),
     agent: new https.Agent({
@@ -236,11 +291,11 @@ async function getPodIP(agentInfo: AgentInfo): Promise<string> {
       keepAlive: false,
     }),
   })
-  if (!res.ok) {
-    return Promise.reject(res)
+  if (!fetchResponse.ok) {
+    throw await rejectResponse(fetchResponse)
   }
 
-  const json = await res.json()
+  const json = await fetchResponse.json()
   const data = isObject(json) ? json : JSON.parse(json as string)
   return data.status.podIP
 }
@@ -257,6 +312,8 @@ async function callJolokiaAgent(
 
   const agentUri = joinPaths(`${agentInfo.protocol}://${podIP}:${agentInfo.port}`, encodedPath)
 
+  logger.trace(`(jolokia-agent) doing a ${method} on ${agentUri}`)
+
   const headers = toFetchHeaders(agentInfo.requestHeaders)
   logger.trace(`(jolokia-agent) callJolokiaAgent - ${agentUri}`)
   logger.trace(`(jolokia-agent) callJolokiaAgent - sending headers`)
@@ -271,6 +328,7 @@ async function callJolokiaAgent(
 
   if (method === 'POST') {
     options.body = JSON.stringify(nonInterceptedMBeans)
+    logger.trace(`(jolokia-agent) ... with body ${options.body}`)
   }
   if (agentInfo.protocol === 'https') {
     options.agent = new https.Agent({
@@ -281,19 +339,19 @@ async function callJolokiaAgent(
     })
   }
 
-  const response = await fetch(agentUri, options)
-  logger.trace(`(jolokia-agent) callJolokiaAgent response: ${printObject(response)}`)
+  const fetchResponse = await fetch(agentUri, options)
+  logger.trace(`(jolokia-agent) callJolokiaAgent response: ${printObject(fetchResponse)}`)
 
-  if (!response.ok) {
-    logger.trace(`(jolokia-agent) callJolokiaAgent failed (${response.status})`)
-    return reject(response.status, { reason: `calljolokiaAgent was rejected: ${response.statusText}` })
+  if (!fetchResponse.ok) {
+    logger.trace(`(jolokia-agent) callJolokiaAgent failed (${fetchResponse.status})`)
+    throw await rejectResponse(fetchResponse)
   }
 
   try {
-    const data = await response.text()
+    const data = await fetchResponse.text()
     logger.trace(`(jolokia-agent) callJolokiaAgent response: ${printObject(data)}`)
 
-    return new SimpleResponse(response.status, data, fromFetchHeaders(response.headers))
+    return new SimpleResponse(fetchResponse.status, data, fromFetchHeaders(fetchResponse.headers))
   } catch (error) {
     logger.trace(`Error when getting data from response: ${printObject(error)}`)
     throw new Error('Failed to parse data from response', { cause: error })
@@ -402,14 +460,14 @@ async function listMBeans(podIP: string, agentInfo: AgentInfo): Promise<Record<s
     })
   }
 
-  const response = await fetch(uri, options)
+  const fetchResponse = await fetch(uri, options)
 
-  if (!response.ok) {
-    logger.trace(`(jolokia-agent) listMBeans failed (${response.status})`)
-    return Promise.reject(response)
+  if (!fetchResponse.ok) {
+    logger.trace(`(jolokia-agent) listMBeans failed (${fetchResponse.status})`)
+    throw await rejectResponse(fetchResponse)
   }
 
-  const jsonString = await response.text()
+  const jsonString = await fetchResponse.text()
   const data = JSON.parse(jsonString)
   return data.value
 }
@@ -486,7 +544,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
 
     const rbac = RBAC.check(mbeanRequest, role)
     if (!rbac.allowed) {
-      return reject(403, { reason: rbac.reason })
+      throw reject(403, { reason: rbac.reason })
     }
 
     const intercepted = RBAC.intercept(mbeanRequest, role, mbeans)
@@ -498,29 +556,32 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
   }
 }
 
+function checkSarResponse(sarResponse: SimpleResponse) {
+  if (!isSimpleResponse(sarResponse) || sarResponse.status < 200 || sarResponse.status >= 300) {
+     // If the SAR service itself returned a 500 or 400, reject it.
+     throw reject(sarResponse.status, { reason: `SAR Check Failed: ${sarResponse.body}` })
+  }
+}
+
 async function proxyJolokiaAgentWithRbac(agentInfo: AgentInfo): Promise<SimpleResponse> {
   logger.trace('(jolokia-agent) proxyJolokiaAgentWithRbac ...')
 
-  let response = await selfLocalSubjectAccessReview('update', agentInfo)
-  if (!response.ok) {
-    return reject(response.status, { reason: `Authorization was rejected: ${response.body}` })
-  }
+  let sarResponse = await selfLocalSubjectAccessReview('update', agentInfo)
+  checkSarResponse(sarResponse)
 
   let role
-  if (response.body === 'true') {
+  if (sarResponse.body === 'true') {
     // map the `update` verb to the `admin` role
     role = 'admin'
   } else {
-    response = await selfLocalSubjectAccessReview('get', agentInfo)
-    if (!response.ok) {
-      return reject(response.status, { reason: `Authorization was rejected: ${response.body}` })
-    }
+    sarResponse = await selfLocalSubjectAccessReview('get', agentInfo)
+    checkSarResponse(sarResponse)
 
-    if (response.body === 'true') {
+    if (sarResponse.body === 'true') {
       // map the `get` verb to the `viewer` role
       role = 'viewer'
     } else {
-      return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }` })
+      throw reject(403, { message: `Subject Access Review Result: { allowed: ${sarResponse.body} }` })
     }
   }
 
@@ -532,11 +593,11 @@ async function proxyJolokiaAgentWithoutRbac(agentInfo: AgentInfo): Promise<Simpl
 
   // Only requests impersonating a user granted the `update` verb on for the pod
   // hosting the Jolokia endpoint is authorized
-  const response = await selfLocalSubjectAccessReview('update', agentInfo)
-  if (!response.ok) {
-    return reject(response.status, { reason: `Authorization was rejected: ${response.body}` })
-  } else if (response.body !== 'true') {
-    return reject(403, { message: `Subject Access Review Result: { allowed: ${response.body} }` })
+  const sarResponse = await selfLocalSubjectAccessReview('update', agentInfo)
+  checkSarResponse(sarResponse)
+
+  if (sarResponse.body !== 'true') {
+    throw reject(403, { message: `Subject Access Review Result: { allowed: ${sarResponse.body} }` })
   }
 
   const podIP = await getPodIP(agentInfo)
@@ -550,22 +611,22 @@ export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, ssl
 
   const parts = req.url.match(/\/management\/namespaces\/(.+)\/pods\/(http|https):(.+):(\d+)\/(.*)/)
   if (!parts) {
-    return reject(404, { reason: 'URL not recognized' }).catch(error => {
-      response(
-        {
-          request: req,
-          requestHeaders: extractHeaders(req, excludeHeaders),
-          response: res,
-          sslOptions: sslOptions,
-          namespace: '',
-          protocol: '',
-          pod: '',
-          port: '',
-          path: '',
-        },
-        error,
-      )
-    })
+    const error = reject(404, { reason: 'URL not recognized' })
+    response(
+      {
+        request: req,
+        requestHeaders: extractHeaders(req, excludeHeaders),
+        response: res,
+        sslOptions: sslOptions,
+        namespace: '',
+        protocol: '',
+        pod: '',
+        port: '',
+        path: '',
+      },
+      error.response,
+    )
+    return
   }
 
   const agentInfo = {
@@ -584,22 +645,30 @@ export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, ssl
     .then(res => response(agentInfo, res))
     .catch(error => {
       let simpleResponse
-      if (isSimpleResponse(error)) {
+
+      if (isSimpleResponseError(error)) {
+        simpleResponse = error.response
+      } else if (isSimpleResponse(error)) {
         simpleResponse = error
-      } else if (isResponse(error)) {
-        simpleResponse = new SimpleResponse(
-          error.status,
-          !error.body ? error.statusText : error.statusText + '---' + error.body,
-        )
       } else if (isError(error)) {
         const errorPayload = {
           error: error.message
         }
         simpleResponse = new SimpleResponse(502, JSON.stringify(errorPayload))
       } else {
+        let errorMessage = 'An unexpected and unknown error occurred.'
+        try {
+          // Try to serialize the unknown error for better logging
+        errorMessage = `Unknown error: ${JSON.stringify(error)}`
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
+          // Fallback if serialization fails (e.g., circular references)
+          errorMessage = `Unknown error: ${String(error)}`
+        }
+
         simpleResponse = new SimpleResponse(
-          !error.status ? 502 : error.status,
-          !error.body ? error.statusText : error.statusText + '---' + error.body,
+          500, // Internal Server Error
+          JSON.stringify({ error: errorMessage }),
         )
       }
 
