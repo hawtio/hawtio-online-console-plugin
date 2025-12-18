@@ -1,5 +1,7 @@
 import util from 'util'
 
+export const IP_ADDRESS_MASK = '***.***.***.***'
+
 export function isObject(value: unknown): value is object {
   if (!value) return false
 
@@ -64,7 +66,7 @@ export function maskIPAddresses(obj: string | object): string {
   // Return jsonStr if masking has been disabled
   if (shouldMaskIPAddresses.toLowerCase() !== 'true') return jsonStr
 
-  return !jsonStr || jsonStr.length === 0 ? jsonStr : jsonStr.replaceAll(ipPattern, '<masked>')
+  return !jsonStr || jsonStr.length === 0 ? jsonStr : jsonStr.replaceAll(ipPattern, IP_ADDRESS_MASK)
 }
 
 /**

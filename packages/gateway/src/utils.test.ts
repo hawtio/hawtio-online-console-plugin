@@ -1,4 +1,4 @@
-import { maskIPAddresses } from './utils'
+import { IP_ADDRESS_MASK, maskIPAddresses } from './utils'
 
 describe('utils', () => {
   const OLD_ENV = process.env
@@ -33,13 +33,13 @@ describe('utils', () => {
     const response = maskIPAddresses(input)
     expect(response).not.toContain(ip1)
     expect(response).not.toContain(ip2)
-    expect(response).toContain('<masked>')
+    expect(response).toContain(IP_ADDRESS_MASK)
   })
 
   it('maskIPAddresses-false', () => {
     process.env.HAWTIO_ONLINE_MASK_IP_ADDRESSES = 'false'
     const response = maskIPAddresses(input)
-  expect(response).toContain(ip1)
+    expect(response).toContain(ip1)
     expect(response).toContain(ip2)
   })
 })
