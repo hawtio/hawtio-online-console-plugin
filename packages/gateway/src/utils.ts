@@ -58,6 +58,10 @@ export function maskIPAddresses(obj: string | object): string {
   if (isObject(obj)) jsonStr = JSON.stringify(obj)
   else jsonStr = obj
 
+  const shouldMaskIPAddresses = process.env.HAWTIO_ONLINE_MASK_IP_ADDRESSES ?? 'true'
+  // Return jsonStr if masking has been disabled
+  if (shouldMaskIPAddresses.toLowerCase() !== 'true') return jsonStr
+
   return !jsonStr || jsonStr.length === 0 ? jsonStr : jsonStr.replaceAll(ipPattern, '<masked>')
 }
 

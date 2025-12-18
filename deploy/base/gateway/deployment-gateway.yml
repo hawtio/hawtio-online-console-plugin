@@ -35,6 +35,8 @@ spec:
               value: /etc/tls/private/proxying/tls.crt
             - name: HAWTIO_ONLINE_GATEWAY_LOG_LEVEL
               value: trace
+            - name: HAWTIO_ONLINE_MASK_IP_ADDRESSES
+              value: "true"
           ports:
             - name: express
               containerPort: 8443

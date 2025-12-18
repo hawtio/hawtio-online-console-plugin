@@ -34,6 +34,8 @@ spec:
               value: /etc/tls/private/proxying/tls.crt
             - name: HAWTIO_ONLINE_GATEWAY_LOG_LEVEL
               value: {{ .Values.gateway.log.level }}
+            - name: HAWTIO_ONLINE_MASK_IP_ADDRESSES
+              value: "{{ .Values.gateway.log.maskIPAddresses }}"
           ports:
             - name: express
               containerPort: {{ .Values.gateway.service.port }}
