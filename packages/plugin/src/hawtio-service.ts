@@ -1,4 +1,4 @@
-import { fetchPatchService } from './fetch-patch-service'
+import { basePath } from './scoped-fetch'
 import {
   camel,
   configManager,
@@ -101,7 +101,7 @@ class HawtioService {
        */
       await userService.fetchUser()
       configManager.addProductInfo('Hawtio Online (Plugin)', HAWTIO_ONLINE_VERSION)
-      hawtio.setBasePath(fetchPatchService.getBasePath())
+      hawtio.setBasePath(basePath)
     }
 
     hawtioService.setInitialized(true)

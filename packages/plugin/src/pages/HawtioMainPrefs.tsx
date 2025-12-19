@@ -1,9 +1,3 @@
-/*
- * required to patch fetch
- * its constructor sets up the interceptor before importing hawtio
- * so do not move this down the import list below @hawtio/react
- */
-import { fetchPatchService } from '../fetch-patch-service'
 import React, { useEffect, useState } from 'react'
 import { hawtioService } from '../hawtio-service'
 import { preferencesRegistry } from '@hawtio/react'
@@ -34,13 +28,6 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = pr
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>()
   const [prefsPageId, setPrefsPageId] = useState<string>('')
-
-  useEffect(() => {
-    fetchPatchService.setupFetch()
-    return () => {
-      hawtioService.destroy()
-    }
-  }, [])
 
   useEffect(() => {
     if (isLoading) {

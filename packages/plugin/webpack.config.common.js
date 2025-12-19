@@ -124,6 +124,9 @@ const common = (mode, publicPath, env) => {
         HAWTIO_ONLINE_PACKAGE_VERSION: JSON.stringify(packageVersion),
         HAWTIO_ONLINE_PUBLIC_PATH: JSON.stringify(publicPath),
       }),
+      new webpack.ProvidePlugin({
+        fetch: [ path.resolve(__dirname, 'src/scoped-fetch.ts'), 'scopedFetch' ],
+      }),
     ],
     output: {
       path: path.resolve(__dirname, 'dist'),
