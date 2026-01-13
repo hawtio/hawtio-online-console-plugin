@@ -20,7 +20,7 @@
 SHELL := /bin/bash
 
 VERSION := 0.6.0
-PLUGIN := hawtio-online-console-plugin
+PLUGIN_NAME := hawtio-online-console-plugin
 #LAST_RELEASED_PLUGIN_IMAGE := hawtio/$(PLUGIN)
 #LAST_RELEASED_VERSION ?=
 CONTROLLER_GEN_VERSION := v0.6.1
@@ -238,7 +238,7 @@ setup: yarn
 #
 #---
 build: setup
-	@echo "####### Building $(PLUGIN) ..."
+	@echo "####### Building $(PLUGIN_NAME) ..."
 	yarn build
 
 #---
@@ -493,7 +493,7 @@ else
 	@$(KUSTOMIZE) build $(KOPTIONS) $(DEPLOY)/$(BASE)/$(PLUGIN) | \
 		sed 's/$(PLACEHOLDER)/$(NAMESPACE)/' | \
 		$(KUBECTL) apply -f -
-	./scripts/patch-console.sh $(PLUGIN)
+	./scripts/patch-console.sh $(PLUGIN_NAME)
 endif
 
 #---

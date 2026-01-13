@@ -1,0 +1,42 @@
+{{- if .Values.plugin.jobs.patchConsoles.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "hawtio-online-console-plugin.patchServiceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.plugin | indent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.plugin | indent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ template "hawtio-online-console-plugin.patchServiceAccountName" . }}
+      {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.jobs.patchConsoles.podSecurityContext.enabled) }}
+      securityContext: {{ tpl (toYaml (omit .Values.plugin.jobs.patchConsoles.podSecurityContext "enabled")) $ | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: patcher
+          image: {{ required "Patcher image must be specified!" .Values.plugin.jobs.patchConsoles.image }}
+          {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.containerSecurityContext) }}
+          securityContext: {{ tpl (toYaml (omit .Values.plugin.jobs.patchConsoles.containerSecurityContext "enabled")) $ | nindent 12 }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          command:
+          - /bin/bash
+          - -c
+          - |
+              existingPlugins=$(oc get consoles.operator.openshift.io cluster -o json | jq -c '.spec.plugins // []')
+              mergedPlugins=$(jq --argjson existingPlugins "${existingPlugins}" --argjson consolePlugin '["{{ template "hawtio-online-console-plugin.name" . }}"]' -c  -n '$existingPlugins + $consolePlugin | unique')
+              patchedPlugins=$(jq --argjson mergedPlugins $mergedPlugins -n -c  '{ "spec": { "plugins": $mergedPlugins } }')
+              oc patch consoles.operator.openshift.io cluster --patch $patchedPlugins  --type=merge
+{{- end }}

@@ -1,7 +1,7 @@
 apiVersion: console.openshift.io/v1
 kind: ConsolePlugin
 metadata:
-  name: {{ .Values.plugin.name }}
+  name: {{ template "hawtio-online-console-plugin.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
 {{ include "hawtio-online-console-plugin.app.labels" .Values.plugin | indent 4 }}
@@ -10,7 +10,7 @@ spec:
   backend:
     type: Service
     service:
-      name: {{ .Values.plugin.name }}
+      name: {{ template "hawtio-online-console-plugin.name" . }}
       namespace: {{ .Release.Namespace }}
       port: {{ .Values.plugin.service.port }}
       basePath: '/'

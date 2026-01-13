@@ -1,0 +1,13 @@
+{{- if .Values.plugin.jobs.patchConsoles.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "hawtio-online-console-plugin.patcherName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "hawtio-online-console-plugin.app.labels" .Values.plugin | indent 4 }}
+rules:
+  - apiGroups: ["operator.openshift.io"]
+    resources: ["consoles"]
+    verbs: ["get","list","patch", "update"]
+{{- end }}

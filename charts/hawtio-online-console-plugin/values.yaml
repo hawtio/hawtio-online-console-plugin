@@ -6,7 +6,7 @@ plugin:
   name: hawtio-online-console-plugin
   image:
     name: quay.io/hawtio/online-console-plugin
-#    tag: 0.5.0-alpha1
+#    tag: 0.6.0
     pullPolicy: IfNotPresent
   component: plugin
   application: hawtio-online-console-plugin
@@ -15,13 +15,33 @@ plugin:
       name: hawtio-online-console-plugin-serving
   service:
     port: 9443
+  securityContext:
+    enabled: true
+  jobs:
+    patchConsoles:
+      enabled: true
+      patchServiceAccount:
+        create: true
+        name: ""
+      image: "registry.redhat.io/openshift4/ose-tools-rhel8@sha256:e44074f21e0cca6464e50cb6ff934747e0bd11162ea01d522433a1a1ae116103"
+      podSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containerSecurityContext:
+        enabled: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
 
 gateway:
   name: hawtio-online-console-plugin-gateway
   shortname: gateway
   image:
     name: quay.io/hawtio/online-console-plugin-gateway
-#    tag: 0.5.0-alpha1
+#    tag: 0.6.0
     pullPolicy: IfNotPresent
   component: server
   application: hawtio-online-console-plugin

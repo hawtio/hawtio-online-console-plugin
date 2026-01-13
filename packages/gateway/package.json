@@ -1,6 +1,6 @@
 {
   "name": "@hawtio/online-plugin-gateway",
-  "version": "0.5.0-alpha1",
+  "version": "0.6.0",
   "description": "The hawtio-online-plugin gateway to jolokia on OpenShift",
   "author": "Hawtio developer team",
   "license": "Apache-2.0",

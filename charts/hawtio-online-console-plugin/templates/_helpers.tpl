@@ -36,3 +36,28 @@ app.kubernetes.io/instance: {{ .name }}
 app.kubernetes.io/part-of: {{ .application }}
 app.kubernetes.io/managed-by: Helm
 {{- end }}
+
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "hawtio-online-console-plugin.name" -}}
+{{ required "A plugin name is required!" .Values.plugin.name }}
+{{- end }}
+
+{{/*
+Create the name of the patch service account to use
+*/}}
+{{- define "hawtio-online-console-plugin.patchServiceAccountName" -}}
+{{- if .Values.plugin.jobs.patchConsoles.patchServiceAccount.create }}
+{{- default (printf "%s-patcher" (include "hawtio-online-console-plugin.name" .)) .Values.plugin.jobs.patchConsoles.patchServiceAccount.name }}
+{{- else }}
+{{- default "default" .Values.plugin.jobs.patchConsoles.patchServiceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the console patcher
+*/}}
+{{- define "hawtio-online-console-plugin.patcherName" -}}
+{{- printf "%s-patcher" (include "hawtio-online-console-plugin.name" .) }}
+{{- end }}
