@@ -2,7 +2,7 @@ apiVersion: v2
 name: hawtio-online-console-plugin
 description: A Helm chart for installing the OpenShift Console plugin for HawtIO
 type: application
-version: 0.6.0
+version: 0.6.1
 appVersion: 0.6.0
 keywords:
   - hawtio
@@ -13,3 +13,4 @@ keywords:
 home: https://hawt.io
 sources:
   - https://github.com/hawtio/hawtio-online-console-plugin.git
+icon: https://hawtio.github.io/hawtio-charts/hawtio-console-plugin-logo.png
