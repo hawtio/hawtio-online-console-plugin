@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hawtio Online Console Plugin Values",
+  "description": "The configuration values for the plugin container",
+  "type": "object",
+  "properties": {
+    "plugin": {
+      "type": "object",
+      "title": "Plugin Configuration",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the plugin resource"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Container image repository"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Container image tag. Defaults to Chart.appVersion if not set."
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ],
+              "description": "The OpenShift image pull policy"
+            }
+          }
+        },
+        "component": {
+          "type": "string"
+        },
+        "application": {
+          "type": "string"
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "serving": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "description": "Exposed port for the plugin's service"
+            }
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Global toggle for security contexts"
+            }
+          }
+        },
+        "jobs": {
+          "type": "object",
+          "properties": {
+            "patchConsoles": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enables the job to patch the OpenShift Console Operator (true by default)"
+                },
+                "patchServiceAccount": {
+                  "type": "object",
+                  "properties": {
+                    "create": {
+                      "type": "boolean"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "image": {
+                  "type": "string",
+                  "description": "Image used for the console-patcher job (ose-tools)"
+                },
+                "podSecurityContext": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "runAsNonRoot": {
+                      "type": "boolean"
+                    },
+                    "seccompProfile": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "containerSecurityContext": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "allowPrivilegeEscalation": {
+                      "type": "boolean"
+                    },
+                    "capabilities": {
+                      "type": "object",
+                      "properties": {
+                        "drop": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "title": "Gateway Configuration",
+      "description": "The configuration values for the gateway container",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "shortname": {
+          "type": "string"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ]
+            }
+          }
+        },
+        "component": {
+          "type": "string"
+        },
+        "application": {
+          "type": "string"
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "proxy": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "serving": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "rbac": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "log": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string",
+              "description": "Log level (e.g. info, debug, warn)"
+            },
+            "maskIPAddresses": {
+              "type": "boolean",
+              "description": "Mask IP addresses in application responses"
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits",
+      "properties": {
+        "limits": {
+          "type": "object"
+        },
+        "requests": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
