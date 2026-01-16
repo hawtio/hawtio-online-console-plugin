@@ -43,3 +43,4 @@ tls-certificates/*.key
 tls-certificates/*.srl
 
 charts/publish
+charts/patching
