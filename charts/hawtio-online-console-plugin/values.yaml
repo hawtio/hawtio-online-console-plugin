@@ -1,5 +1,10 @@
 # Default values for hawtio-online-console-plugin.
 
+# If true, the chart will generate a self-signed CA and Certificate
+# instead of looking up the 'openshift-service-ca' secret.
+# Used for linting and verification.
+mockProxySecret: false
+
 # Override the tags to install a different version
 # of the containers - default: Chart.appVersion
 plugin:

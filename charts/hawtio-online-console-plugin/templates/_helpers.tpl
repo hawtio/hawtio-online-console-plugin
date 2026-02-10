@@ -7,22 +7,32 @@
   - Outputs the proxy certificate's key and certificate as tls.key and tls.crt respectively
 */}}
 {{- define "hawtio-online-console-plugin.proxy.gen-cert" -}}
-{{- $caSecret := (lookup "v1" "Secret" "openshift-service-ca" "signing-key") }}
-{{- if not $caSecret }}
-{{- fail "Error: OCP signing-key is required" }}
+{{- /* Check if mock is being requested */ -}}
+{{- if .Values.mockProxySecret }}
+  {{- /* MOCK PATH: Generate self-signed CA immediately */ -}}
+  {{- $ca := genCA "hawtio-mock-ca" 365 }}
+  {{- $cert := (genSignedCert "hawtio-online.hawtio.svc" nil nil 365 $ca) -}}
+  {{- (print "tls.key: " ($cert.Key | b64enc)) | nindent 2 }}
+  {{- (print "tls.crt: " ($cert.Cert | b64enc)) | nindent 2 }}
+{{- else }}
+  {{- /* Lookup secret signing key from cluster */ -}}
+  {{- $caSecret := (lookup "v1" "Secret" "openshift-service-ca" "signing-key") }}
+  {{- if not $caSecret }}
+    {{- fail "Error: OCP signing-key is required. For linting, use '--set mockProxySecret=true'." }}
+  {{- end }}
+  {{- $caKey := (index $caSecret.data "tls.key") }}
+  {{- if not $caKey }}
+    {{- fail "Error: OCP signing-key tls.key is required" }}
+  {{- end }}
+  {{- $caCert := (index $caSecret.data "tls.crt") }}
+  {{- if not $caCert }}
+    {{- fail "Error: OCP signing-key tls.crt is required" }}
+  {{- end }}
+  {{- $ca := buildCustomCert $caCert $caKey }}
+  {{- $cert := (genSignedCert "hawtio-online.hawtio.svc" nil nil 365 $ca) -}}
+  {{- (print "tls.key: " ($cert.Key | b64enc)) | nindent 2 }}
+  {{- (print "tls.crt: " ($cert.Cert | b64enc)) | nindent 2 }}
 {{- end }}
-{{- $caKey := (index $caSecret.data "tls.key") }}
-{{- if not $caKey }}
-{{- fail "Error: OCP signing-key tls.key is required" }}
-{{- end }}
-{{- $caCert := (index $caSecret.data "tls.crt") }}
-{{- if not $caCert }}
-{{- fail "Error: OCP signing-key tls.crt is required" }}
-{{- end }}
-{{- $ca := buildCustomCert $caCert $caKey }}
-{{- $cert := (genSignedCert "hawtio-online.hawtio.svc" nil nil 365 $ca) -}}
-{{ (print "tls.key: " ($cert.Key | b64enc)) | indent 2 }}
-{{ (print "tls.crt: " ($cert.Cert | b64enc)) | indent 2 }}
 {{- end }}
 
 {{/*

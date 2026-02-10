@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "hawtio-online-console-plugin.name" . }}-test-connection"
+  labels:
+    {{- include "hawtio-online-console-plugin.app.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    seccomp.security.alpha.kubernetes.io/pod: runtime/default
+spec:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: registry.access.redhat.com/ubi9/ubi-minimal:9.4
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
+        readOnlyRootFilesystem: true
+      command: ['curl']
+      args:
+        - '-k'                     # Ignore self-signed cert error (insecure)
+        - '-v'                     # Verbose (print headers/handshake for debugging)
+        - '--fail'                 # Fail on HTTP error (4xx/5xx) -> exit code 1
+        - '--connect-timeout'      # Timeout...
+        - '5'                      # ...5 seconds
+        - '--retry'                # Retries...
+        - '0'                      # ...0 times (Fail fast)
+        - 'https://{{ include "hawtio-online-console-plugin.name" . }}:{{ .Values.plugin.service.port }}'
+  restartPolicy: Never
