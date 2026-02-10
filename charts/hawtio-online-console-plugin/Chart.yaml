@@ -4,8 +4,10 @@ description: A Helm chart for installing the OpenShift Console plugin for HawtIO
 type: application
 version: 0.6.2
 appVersion: 0.6.0
+kubeVersion: ">= 1.24.0"
 annotations:
   artifacthub.io/prerelease: "true"
+  charts.openshift.io/name: hawtio-online-console-plugin
 keywords:
   - hawtio
   - camel
