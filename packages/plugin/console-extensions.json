@@ -50,5 +50,15 @@
         "component": { "$codeRef": "HawtioMainPrefs" }
       }
     }
+
+  },
+  {
+    "type": "console.tab",
+    "properties": {
+      "contextId": "camel-dashboard-tabs",
+      "name": "HawtIO",
+      "href": "hawtio",
+      "component": { "$codeRef": "CamelDashboardHawtioTab" }
+    }
   }
 ]
