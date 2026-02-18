@@ -1,5 +1,5 @@
 import React, { Ref, useEffect, useMemo, useState } from 'react'
-import { Alert, Card, CardBody, MenuToggle, MenuToggleElement, PageSection, PageSectionVariants, Select, SelectList, SelectOption, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core'
+import { MenuToggle, MenuToggleElement, PageSection, PageSectionVariants, Select, SelectList, SelectOption, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core'
 import { CubesIcon } from '@patternfly/react-icons'
 import '@patternfly/patternfly/patternfly.css'
 import '@hawtio/react/dist/index.css'
@@ -159,36 +159,27 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
     return <ConsoleLoading />
   }
 
-  // Show error if no pods with Jolokia found
+  // Show minimal message if no pods with Jolokia found
   if (jolokiaPods.length === 0) {
-    const totalPods = resources.pods.data?.length || 0
-    const msg = totalPods > 0
-      ? `No pods with Jolokia port found. This CamelApp has ${totalPods} pod(s) but none expose Jolokia on port 8778.\n\nTo enable Hawtio integration, ensure your Camel application exposes a Jolokia endpoint.`
-      : 'No pods available for this CamelApp.'
-
-    const debugInfo = {
-      ownerRef: ownerRef?.kind + '/' + ownerRef?.name,
-      ownerLoaded,
-      ownerSelector: owner?.spec?.selector,
-      totalPods,
-      jolokiaPods: jolokiaPods.length,
-    }
-
     return (
       <PageSection variant={PageSectionVariants.light}>
-        <Card>
-          <CardBody>
-            <Alert variant='warning' title='Hawtio not available'>
-              <p style={{ whiteSpace: 'pre-wrap' }}>{msg}</p>
-              <details style={{ marginTop: '1rem' }}>
-                <summary>Debug Information</summary>
-                <pre style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </details>
-            </Alert>
-          </CardBody>
-        </Card>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '400px',
+          color: 'var(--pf-v5-global--Color--200)',
+          fontSize: '0.9rem'
+        }}>
+          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
+            <p style={{ marginBottom: '0.5rem' }}>
+              Hawtio is not available for this CamelApp.
+            </p>
+            <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+              No pods with Jolokia endpoint detected.
+            </p>
+          </div>
+        </div>
       </PageSection>
     )
   }
