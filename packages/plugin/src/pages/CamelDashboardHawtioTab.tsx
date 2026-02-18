@@ -5,6 +5,7 @@ import '@patternfly/patternfly/patternfly.css'
 import '@hawtio/react/dist/index.css'
 import './openshift-console-plugin.css'
 import './hawtiomaintab.css'
+import './camel-dashboard-hawtio-tab.css'
 import { log } from '../globals'
 import { useK8sWatchResource, useK8sWatchResources } from '@openshift-console/dynamic-plugin-sdk'
 import { connectionService } from '../connection-service'
@@ -163,19 +164,12 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
   if (jolokiaPods.length === 0) {
     return (
       <PageSection variant={PageSectionVariants.light}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          color: 'var(--pf-v5-global--Color--200)',
-          fontSize: '0.9rem'
-        }}>
-          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <p style={{ marginBottom: '0.5rem' }}>
+        <div className='camel-dashboard-hawtio-tab__empty-state'>
+          <div className='camel-dashboard-hawtio-tab__empty-state-content'>
+            <p className='camel-dashboard-hawtio-tab__empty-state-title'>
               Hawtio is not available for this CamelApp.
             </p>
-            <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+            <p className='camel-dashboard-hawtio-tab__empty-state-subtitle'>
               No pods with Jolokia endpoint detected.
             </p>
           </div>
@@ -186,9 +180,9 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
 
   // Render pod selector (only if multiple pods) + HawtioMainTab child
   return (
-    <div style={{ minHeight: '800px', height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+    <div className='camel-dashboard-hawtio-tab'>
       {jolokiaPods.length > 1 && (
-        <Toolbar style={{ paddingBottom: '1rem' }}>
+        <Toolbar className='camel-dashboard-hawtio-tab__toolbar'>
           <ToolbarContent>
             <ToolbarItem>
               <Select

@@ -1,0 +1,42 @@
+/*
+ * ===========================================
+ * CamelDashboardHawtioTab component styles
+ * ===========================================
+ */
+
+/* Container for the Hawtio tab content */
+.camel-dashboard-hawtio-tab {
+  min-height: 800px;
+  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pod selector toolbar */
+.camel-dashboard-hawtio-tab__toolbar {
+  padding-bottom: 1rem;
+}
+
+/* Empty state when no Jolokia pods are available */
+.camel-dashboard-hawtio-tab__empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--pf-v5-global--Color--200);
+  font-size: 0.9rem;
+}
+
+.camel-dashboard-hawtio-tab__empty-state-content {
+  text-align: center;
+  max-width: 500px;
+}
+
+.camel-dashboard-hawtio-tab__empty-state-title {
+  margin-bottom: 0.5rem;
+}
+
+.camel-dashboard-hawtio-tab__empty-state-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
