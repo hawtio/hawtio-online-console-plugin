@@ -106,6 +106,7 @@ const common = (mode, publicPath, env) => {
             HawtioDiscover: './pages/HawtioDiscover',
             HawtioMainTab: './pages/HawtioMainTab',
             HawtioMainPrefs: './pages/HawtioMainPrefs',
+            CamelDashboardHawtioTab: './pages/CamelDashboardHawtioTab',
           },
           dependencies: {
             '@console/pluginAPI': '*',
