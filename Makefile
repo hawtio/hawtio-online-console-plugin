@@ -19,7 +19,7 @@
 #
 SHELL := /bin/bash
 
-VERSION := 0.6.0
+VERSION := 0.7.0
 PLUGIN_NAME := hawtio-online-console-plugin
 #LAST_RELEASED_PLUGIN_IMAGE := hawtio/$(PLUGIN)
 #LAST_RELEASED_VERSION ?=
