@@ -3,28 +3,55 @@
  * Modifies appearance of the main page
  * ===========================================
  */
-#hawtio-main-page {
+
+ /* Strip the Hawtio page wrapper of its viewport-locking height */
+ #hawtio-main-page {
+   min-height: 100%;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   flex-grow: 1;
+   background-color: transparent !important;
+
+   /* Override the PF6 CSS variables locally on this specific element */
+   --pf-v6-c-page--Height: auto !important;
+   --pf-v6-c-page--MinHeight: 0 !important;
+
+   /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
+   --pf-v5-c-page--BackgroundColor: var(--hawtio-page--BackgroundColor) !important;
+
+   --pf-v5-c-page__main-section--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+
+   /*
+    * If a react component has variant="light", this adds the .pf-m-light class.
+    * This class forces the background to use the '--m-light--BackgroundColor' variable,
+    * even if the theme is dark.
+    * Override that variable here to point to hawtio's custom section color that observes the theme.
+    */
+   --pf-v5-c-page__main-section--m-light--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+
+   --pf-v5-c-page__main-tabs--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+   --pf-v5-c-tabs__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+   --pf-v5-c-tabs--m-box__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+ }
+
+/* Neutralize the PF6 intermediary flex container */
+#hawtio-main-page > .pf-v6-c-page__main-container {
+  display: flex;
   flex-grow: 1;
+  overflow: visible !important;
+  margin-left: 0 /* Removes indentation from default pagen container */
+}
 
-  /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
-  background-color: var(--hawtio-page-BackgroundColor) !important;
-
-  /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
-  --pf-v5-c-page--BackgroundColor: var(--hawtio-page--BackgroundColor) !important;
-
-  --pf-v5-c-page__main-section--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
-
-  /*
-   * If a react component has variant="light", this adds the .pf-m-light class.
-   * This class forces the background to use the '--m-light--BackgroundColor' variable,
-   * even if the theme is dark.
-   * Override that variable here to point to hawtio's custom section color that observes the theme.
-   */
-  --pf-v5-c-page__main-section--m-light--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
-
-  --pf-v5-c-page__main-tabs--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
-  --pf-v5-c-tabs__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
-  --pf-v5-c-tabs--m-box__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+/*
+ * Removes the internal scrollbar and stretching
+ * on the actual content container
+ */
+#hawtio-main-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: clip !important;
 }
 
 /*
@@ -32,7 +59,6 @@
  * Removes the vertical double scrollbar
  * ========================================
  */
-#hawtio-main-page,
 .camel-split,
 .jmx-split {
   height: auto !important;
@@ -84,6 +110,11 @@
   /* Removes the padding */
   --pf-v6-c-masthead--PaddingRight: 0;
   --pf-v6-c-masthead--PaddingLeft: 0;
+  --pf-v6-c-masthead--PaddingTop: 0;
+  --pf-v6-c-masthead--PaddingBottom: 0;
+
+  /* Removes all padding as waste of space */
+  padding: 0;
 
   /* Apply calculated variable to the PF6 masthead component */
   --pf-v6-c-masthead--BackgroundColor: var(--hawtio-masthead--BackgroundColor) !important;
@@ -92,7 +123,27 @@
   border-bottom-color: lightgrey;
   border-bottom-width: thin;
   border-bottom-style: solid;
+
 }
+
+/*
+ * ========================================
+ * Get the background color the same as the
+ * underlying masthead.
+ * ========================================
+ */
+#hawtio-header-toolbar {
+  background-color: var(--hawtio-header--BackgroundColor) !important;
+}
+
+/*
+ * Control the theming of the icons to ensure
+ * they show up in both dark and light modes
+ */
+#hawtio-header-toolbar svg {
+  color: var(--hawtio-header--DropdownColor) !important;
+}
+
 
 #plugin-header-dropdown-toggle {
   /* Changes text colour of the plugin toolbar menu button */
@@ -123,7 +174,6 @@
  * by default inherits the #hawtio-main-page (too dark in dark mode)
  * Set the surrounding div of the treeview to the same as the treeview
  */
-#hawtio-main-page div,
 #camel-tree-view,
 #jmx-tree-view {
   background-color: var(--hawtio-treeview--BackgroundColor);
@@ -154,25 +204,6 @@
 
 /*
  * ========================================
- * Get the background color from the
- * underlying masthead rather than painting
- * the toolbar
- * ========================================
- */
-#hawtio-header-toolbar {
-  background-color: transparent !important;
-}
-
-/*
- * Control the theming of the icons to ensure
- * they show up in both dark and light modes
- */
-#hawtio-header-toolbar svg {
-  color: var(--hawtio-header--DropdownColor) !important;
-}
-
-/*
- * ========================================
  * Changes the background of the source tab
  * to match the console theme
  * ========================================
@@ -186,4 +217,76 @@
 .monaco-editor .margin {
   /* Tries PF6 and fallback to PF5 */
   background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
+}
+
+/*
+ * =====================================
+ * Reduces waste space in camel content
+ * =====================================
+ */
+#camel-content-main {
+  gap: 0.2em;
+}
+
+/*
+ * ===========================================
+ * Target the React Flow attribution watermark
+ * ===========================================
+ */
+#hawtio-main-container .react-flow__attribution {
+  /*
+   * Moving it to bottom-left keeps it out of the way of the Lightspeed AI
+   * button and OpenShift's default right-aligned floating actions.
+   */
+  right: auto !important;
+  left: 10px !important;
+  bottom: 10px !important;
+
+  /* Soften the visual impact */
+  opacity: 0.4 !important;
+  font-size: 8px !important;
+
+  /* Strip the hard white background pill so it blends into the canvas */
+  background: transparent !important;
+  box-shadow: none !important;
+
+  /* Add a smooth hover reveal for accessibility */
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+/* Bring it to full opacity if a user actually interacts with it */
+#hawtio-main-container .react-flow__attribution:hover {
+  opacity: 1 !important;
+}
+
+/* Ensure the links inside inherit the softer styling */
+#hawtio-main-container .react-flow__attribution a {
+  color: var(--pf-v6-global--Color--100, #151515) !important;
+  text-decoration: none !important;
+}
+
+#hawtio-main-container .react-flow__attribution a:hover {
+  text-decoration: underline !important;
+}
+
+/*
+ * =====================================
+ * Override the hardcoded sizing of the
+ * camel source editor
+ * =====================================
+ */
+#camel-content-main #camel-source-editor {
+  --hawtio-source-code-editor-height: 100%;
+}
+
+/*
+ * ========================================
+ * Reduces the space around the toolbar to
+ * minimize wasted space
+ * ========================================
+ */
+#camel-routes-toolbar {
+  padding-top: 1em;
+  padding-bottom: 0;
+  padding-left: 1em;
 }

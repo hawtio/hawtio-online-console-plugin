@@ -7,7 +7,24 @@ CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
 # Plugin metadata is declared in package.json
 PLUGIN_NAME="hawtio-online-console-plugin"
 GATEWAY_SERVICE="gateway"
-PLUGIN_GATEWAY_HOST=$(oc get route hawtio-online-console-plugin-gateway -o jsonpath='{.spec.host}')
+
+# Temporarily disable exit-on-error so the script doesn't die if the route is missing
+set +e
+PLUGIN_GATEWAY_HOST=$(oc get route hawtio-online-console-plugin-gateway -o jsonpath='{.spec.host}' 2>/dev/null)
+set -e
+
+if [ -z "${PLUGIN_GATEWAY_HOST}" ]; then
+  echo "Notice: Cluster route for gateway not found. Defaulting to local development fallback."
+
+  # Allow overriding via env var, but provide a sensible default if none is supplied.
+  # Change 8080 to whatever port your local sidecar proxy is actually listening on.
+  LOCAL_GATEWAY_FALLBACK=${LOCAL_GATEWAY_FALLBACK:="host.containers.internal:8080"}
+
+  PLUGIN_GATEWAY_HOST="${LOCAL_GATEWAY_FALLBACK}"
+  echo "Using Local Plugin Gateway Host: ${PLUGIN_GATEWAY_HOST}"
+else
+  echo "Using Cluster Plugin Gateway Host: ${PLUGIN_GATEWAY_HOST}"
+fi
 
 set -euo pipefail
 

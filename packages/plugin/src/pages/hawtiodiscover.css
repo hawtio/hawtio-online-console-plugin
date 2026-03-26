@@ -18,6 +18,13 @@
   padding-bottom: 0.25em !important;
 }
 
+#hawtio-discover-title-section > .pf-v6-c-page__main-body {
+  display: flex;
+  flex-direction: column;
+  height: 95%;
+  padding-bottom: 0;
+}
+
 .pod-select-dropdown-toggle {
   background-color:  transparent !important;
   /*

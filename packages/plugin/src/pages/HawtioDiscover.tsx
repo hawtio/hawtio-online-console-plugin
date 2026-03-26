@@ -1,7 +1,7 @@
-import { MenuToggle, MenuToggleElement, Page, PageSection, Select, SelectList, SelectOption, Text, TextContent, Title } from '@patternfly/react-core'
+import { MenuToggle, MenuToggleElement, PageSection, Select, SelectList, SelectOption, Title } from '@patternfly/react-core'
 import { CubesIcon } from '@patternfly/react-icons'
 import { k8sListItems, K8sModel, K8sResourceCommon, NamespaceBar, useActiveNamespace, useK8sModel } from '@openshift-console/dynamic-plugin-sdk'
-import { Ref, useEffect, useState } from 'react'
+import { Fragment, Ref, useEffect, useState } from 'react'
 import './openshift-console-plugin.css'
 import './hawtiodiscover.css'
 import { useOpenShiftTheme } from '../hooks'
@@ -141,8 +141,10 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
   }
 
   return (
-    <Page>
-      <PageSection id='hawtio-discover-namespace-section'>
+    <Fragment>
+      <PageSection
+        id='hawtio-discover-namespace-section'
+        stickyOnBreakpoint={{ default: 'top' }} >
         <NamespaceBar
           onNamespaceChange={onNamespaceChange}>
           <Select
@@ -186,7 +188,7 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
         </NamespaceBar>
       </PageSection>
 
-      <PageSection id='hawtio-discover-title-section'>
+      <PageSection id='hawtio-discover-title-section' isFilled >
         <Title headingLevel="h3">{pageTitle()}</Title>
 
         {isLoading && (
@@ -197,7 +199,7 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
           displayHawtio()
         )}
       </PageSection>
-    </Page>
+    </Fragment>
   )
 }
 

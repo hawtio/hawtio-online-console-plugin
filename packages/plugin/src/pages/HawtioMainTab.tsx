@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Alert, Card, CardBody, PageSection, PageSectionVariants } from '@patternfly/react-core'
-import '@patternfly/patternfly/patternfly.css'
+import { Alert, Card, CardBody, PageSection } from '@patternfly/react-core'
 import { useOpenShiftTheme } from '../hooks'
 import { K8sPod } from '../types'
 import { hawtioService } from '../hawtio-service'
@@ -70,7 +69,7 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
 
   if (error) {
     return (
-      <PageSection variant={PageSectionVariants.light}>
+      <PageSection>
         <Card>
           <CardBody>
             <Alert variant='danger' title='Error occurred while loading'>

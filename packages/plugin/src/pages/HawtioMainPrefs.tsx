@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState} from 'react'
 import { hawtioService } from '../hawtio-service'
 import { preferencesRegistry } from '@hawtio/react'
 import { HawtioLoadingPage } from '@hawtio/react/ui'
@@ -8,15 +8,7 @@ import {
   Alert,
   Card,
   CardBody,
-  Divider,
-  Nav,
-  NavItem,
-  NavList,
-  Page,
-  PageSection,
-  PageSectionVariants,
 } from '@patternfly/react-core'
-import '@patternfly/patternfly/patternfly.css'
 import './openshift-console-plugin.css'
 import './hawtiomainprefs.css'
 import { useOpenShiftTheme } from '../hooks'
@@ -26,10 +18,9 @@ interface HawtioMainPrefsProps {
   id: string
 }
 
-export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = props => {
+export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = () => {
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>()
-  const [prefsPageId, setPrefsPageId] = useState<string>('')
 
   // Ensure the correct theme for OpenShift version
   useOpenShiftTheme()
@@ -51,8 +42,6 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = pr
           return
         }
 
-        if (preferencesRegistry.getPreferences().length > 0) setPrefsPageId(preferencesRegistry.getPreferences()[0].id)
-
         setLoading(false)
       }
 
@@ -66,59 +55,37 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = pr
 
   if (error) {
     return (
-      <PageSection variant={PageSectionVariants.light}>
-        <Card>
-          <CardBody>
-            <Alert variant='danger' title='Error occurred while loading'>
-              <textarea
-                readOnly
-                style={{ width: '100%', height: '100%', resize: 'none', background: 'transparent', border: 'none' }}
-              >
-                {stack(error)}
-              </textarea>
-            </Alert>
-          </CardBody>
-        </Card>
-      </PageSection>
+      <div>
+        <Alert variant='danger' title='Error occurred while loading' isInline>
+          <textarea
+            readOnly
+            rows={10}
+            style={{
+              width: '100%',
+              resize: 'none',
+              background: 'transparent',
+              border: 'none'
+            }}
+            value={stack(error)}
+          />
+        </Alert>
+      </div>
     )
   }
 
-  const onPreferencePageClick = (itemId: string | number) => {
-    setPrefsPageId(itemId.toString())
-  }
-
   return (
-    <Page id='hawtio-preferences'>
-      <PageSection type='tabs' hasShadowBottom>
-        <Nav aria-label='Nav' variant='tertiary'>
-          <NavList>
-            {preferencesRegistry.getPreferences().map(prefs => (
-              <NavItem
-                key={prefs.id}
-                itemId={prefs.id}
-                isActive={prefsPageId === prefs.id}
-                onClick={(event, itemId: string | number) => {
-                  onPreferencePageClick(itemId)
-                }}
-              >
-                {prefs.title}
-              </NavItem>
-            ))}
-          </NavList>
-        </Nav>
-      </PageSection>
-      <Divider />
-      <PageSection>
-        {preferencesRegistry
-          .getPreferences()
-          .filter(prefs => {
-            return prefs.id === prefsPageId
-          })
-          .map(prefs => {
-            return React.createElement(prefs.component)
-          })}
-      </PageSection>
-    </Page>
+    <div id="hawtio-preferences" className="pf-v6-c-form">
+      {preferencesRegistry.getPreferences().map((prefs) => (
+        <React.Fragment key={prefs.id}>
+          {/*
+            React renders the upstream component.
+            Even if it contains a <Form> or <CardBody>, our custom css
+            will flatten it, and <div> wrapper prevents illegal HTML nesting.
+          */}
+          {React.createElement(prefs.component)}
+        </React.Fragment>
+      ))}
+    </div>
   )
 }
 

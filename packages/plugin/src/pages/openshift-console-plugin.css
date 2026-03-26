@@ -78,7 +78,7 @@
    * - Light Mode: Resolves to White (#ffffff)
    * - Dark Mode:  Resolves to Soft Dark Grey (#292929) automatically
    */
-  --hawtio-header--BackgroundColor: var(--pf-t--global--background--color--primary--default, #ffffff);
+  --hawtio-header--BackgroundColor: var(--pf-t--global--background--color--primary--default, #f2f2f2);
 
   /* Color--100 automatically flips from Black to White */
   --hawtio-header--DropdownColor: var(--pf-t--global--text--color--regular, #151515);
@@ -93,7 +93,7 @@
    * Map to the token color that masthead component depends on in PF6
    * and which automatically handles Light (Grey) vs Dark (Black) modes.
    */
-  --hawtio-masthead--BackgroundColor: var(--pf-t--global--background--color--secondary--default, #f2f2f2);
+  --hawtio-masthead--BackgroundColor: var(--pf-t--global--background--color--primary--default, #f2f2f2);
 
   /*
    * Section and Tabs
@@ -110,6 +110,7 @@
  * Completely remove the PatternFly BackgroundImage component
  * when running inside the OpenShift Console.
  */
-.pf-v5-c-background-image {
+.pf-v5-c-background-image,
+.pf-v6-c-background-image {
   display: none !important;
 }

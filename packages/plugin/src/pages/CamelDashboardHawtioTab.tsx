@@ -1,7 +1,6 @@
 import React, { Ref, useEffect, useMemo, useState } from 'react'
-import { MenuToggle, MenuToggleElement, PageSection, PageSectionVariants, Select, SelectList, SelectOption, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core'
+import { MenuToggle, MenuToggleElement, PageSection, Select, SelectList, SelectOption, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core'
 import { CubesIcon } from '@patternfly/react-icons'
-import '@patternfly/patternfly/patternfly.css'
 import '@hawtio/react/dist/index.css'
 import './openshift-console-plugin.css'
 import './hawtiomaintab.css'
@@ -163,7 +162,7 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
   // Show minimal message if no pods with Jolokia found
   if (jolokiaPods.length === 0) {
     return (
-      <PageSection variant={PageSectionVariants.light}>
+      <PageSection>
         <div className='camel-dashboard-hawtio-tab__empty-state'>
           <div className='camel-dashboard-hawtio-tab__empty-state-content'>
             <p className='camel-dashboard-hawtio-tab__empty-state-title'>

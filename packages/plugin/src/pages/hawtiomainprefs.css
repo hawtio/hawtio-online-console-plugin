@@ -1,10 +1,53 @@
-#hawtio-preferences main {
-  width: 60vw;
+/*
+ * ===================================
+ * Neutralise wrapper elements of the
+ * Hawtio preferences containers
+ * ===================================
+ */
+#hawtio-preferences > .pf-v6-c-card__body,
+#hawtio-preferences > form,
+#hawtio-preferences .pf-v6-c-form {
+  display: contents !important;
 }
 
-#hawtio-preferences,
-#hawtio-preferences main,
-#hawtio-preferences main section {
-  /* Tries PF6 and fallback to PF5 */
-  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-global--BackgroundColor));
+/*
+ * ===================================
+ * Stop the display of the title label
+ * on the preferences section
+ * ===================================
+ */
+#hawtio-preferences-content > form > .pf-v6-c-form__group-label {
+  display: none !important;
+}
+
+/*
+ * ===================================
+ * Reduce the padding spacing on the
+ * child loggers button
+ * ===================================
+ */
+#hawtio-preferences #connect-toolbar {
+  padding-bottom: 0 !important;
+}
+
+/*
+ * ====================================
+ * Reduces the margins around the cells
+ * in the child loggers to stop the
+ * slider labels overlapping
+ * ====================================
+ */
+#hawtio-preferences #logs-child-logger-list .pf-v6-c-data-list__cell {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/*
+ * ====================================
+ * Stops slider labels overlapping by
+ * reducing the font size
+ * ====================================
+ */
+#hawtio-preferences #logs-child-logger-list .pf-v6-c-slider__step-label {
+  font-size: var(--pf-t--global--font--size--xs) !important;
 }
