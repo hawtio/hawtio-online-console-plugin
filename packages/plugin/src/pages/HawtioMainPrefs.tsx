@@ -1,14 +1,10 @@
-import React, { useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import { hawtioService } from '../hawtio-service'
 import { preferencesRegistry } from '@hawtio/react'
 import { HawtioLoadingPage } from '@hawtio/react/ui'
 import '@hawtio/react/dist/index.css'
 import { log } from '../globals'
-import {
-  Alert,
-  Card,
-  CardBody,
-} from '@patternfly/react-core'
+import { Alert } from '@patternfly/react-core'
 import './openshift-console-plugin.css'
 import './hawtiomainprefs.css'
 import { useOpenShiftTheme } from '../hooks'
@@ -64,7 +60,7 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = ()
               width: '100%',
               resize: 'none',
               background: 'transparent',
-              border: 'none'
+              border: 'none',
             }}
             value={stack(error)}
           />
@@ -74,8 +70,8 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = ()
   }
 
   return (
-    <div id="hawtio-preferences" className="pf-v6-c-form">
-      {preferencesRegistry.getPreferences().map((prefs) => (
+    <div id='hawtio-preferences' className='pf-v6-c-form'>
+      {preferencesRegistry.getPreferences().map(prefs => (
         <React.Fragment key={prefs.id}>
           {/*
             React renders the upstream component.
@@ -89,4 +85,6 @@ export const HawtioMainPrefs: React.FunctionComponent<HawtioMainPrefsProps> = ()
   )
 }
 
+// OpenShift Console plugin API strictly requires default exports for dynamic components
+// eslint-disable-next-line import/no-default-export
 export default HawtioMainPrefs

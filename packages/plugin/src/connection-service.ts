@@ -15,7 +15,6 @@ const DEFAULT_JOLOKIA_PORT = 8778
 const JOLOKIA_PORT_QUERY = '$.spec.containers[*].ports[?(@.name=="jolokia")]'
 
 class ConnectionService {
-
   podStatus(pod: K8sPod): string {
     // Return results that match
     // https://github.com/openshift/origin/blob/master/vendor/k8s.io/kubernetes/pkg/printers/internalversion/printers.go#L523-L615
@@ -98,7 +97,7 @@ class ConnectionService {
     return reason || 'unknown'
   }
 
-  private jolokiaContainerPort(container: Container): number|null {
+  private jolokiaContainerPort(container: Container): number | null {
     const ports: Array<ContainerPort> = container.ports || []
     log.debug(`jolokiaContainerPorts identified: ${ports}`)
     const containerPort = ports.find(port => port.name === 'jolokia')
@@ -112,7 +111,7 @@ class ConnectionService {
   private jolokiaContainers(pod: K8sPod): Array<Container> {
     if (!pod) return []
 
-    if (! this.hasJolokiaPort(pod)) return []
+    if (!this.hasJolokiaPort(pod)) return []
 
     const containers: Array<Container> = pod.spec?.containers || []
     return containers.filter(container => {
@@ -124,7 +123,9 @@ class ConnectionService {
     const ports = jsonpath.query(pod, JOLOKIA_PORT_QUERY)
     log.debug(`jolokiaPort found ${ports} in pod`)
     if (!ports || ports.length === 0) {
-      log.warn(`jolokiaPort could not query a port so using the default ${DEFAULT_JOLOKIA_PORT}. This might mean the pod cannot be accessed.`)
+      log.warn(
+        `jolokiaPort could not query a port so using the default ${DEFAULT_JOLOKIA_PORT}. This might mean the pod cannot be accessed.`,
+      )
       return DEFAULT_JOLOKIA_PORT
     }
 
@@ -240,17 +241,15 @@ class ConnectionService {
           if (errorJson && errorJson.error) {
             message = errorJson.error
           }
-
         } catch (jsonError) {
           // Wasn't valid JSON.
           // Message is already the full 'errorText', so no action is needed here.
-          log.debug('Response body was not valid JSON. Using raw text for error message.')
+          log.error('Response body was not valid JSON. Using raw text for error message.', jsonError)
         }
-
       } catch (textError) {
         // Catches if `response.text()` itself fails.
         // This would be due to a TypeError (e.g., body already read).
-        log.error('Failed to read response body as text:', textError);
+        log.error('Failed to read response body as text:', textError)
         // No action is needed because `message` variable still holds the
         // initial fallback value of `response.statusText`.
       }

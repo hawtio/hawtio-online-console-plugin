@@ -50,7 +50,6 @@
         "component": { "$codeRef": "HawtioMainPrefs" }
       }
     }
-
   },
   {
     "type": "console.tab",

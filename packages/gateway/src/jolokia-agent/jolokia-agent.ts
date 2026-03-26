@@ -1,6 +1,6 @@
 import yaml from 'yaml'
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
-import fetch, {Response as FetchResponse} from 'node-fetch'
+import fetch, { Response as FetchResponse } from 'node-fetch'
 import { jwtDecode } from 'jwt-decode'
 import * as fs from 'fs'
 import https from 'https'
@@ -45,7 +45,6 @@ function isConnectionErrorHtml(text: string): boolean {
   if (!text || text.length === 0) return false
   return text.includes('<div>') && text.includes('A connection error occurred') && text.includes('</div>')
 }
-
 
 function initRBACFile(rbacFilePath: string) {
   let aclFile
@@ -145,7 +144,7 @@ function reject(status: number, body: Record<string, string>): SimpleResponseErr
       JSON.stringify(body),
       new Headers({
         'Content-Type': 'application/json',
-      })
+      }),
     ),
   )
 }
@@ -159,7 +158,7 @@ async function rejectResponse(response: FetchResponse): Promise<SimpleResponseEr
   try {
     const json = await response.json()
     body = JSON.stringify(json)
-  if (body === '{}') body = '' // make body empty as effectively useless as empty json
+    if (body === '{}') body = '' // make body empty as effectively useless as empty json
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     body = await responseClone.text()
@@ -175,13 +174,7 @@ async function rejectResponse(response: FetchResponse): Promise<SimpleResponseEr
     body = `${response.statusText}. ${body}`
   }
 
-  return new SimpleResponseError(
-    new SimpleResponse(
-      response.status,
-      JSON.stringify({ error: body }),
-      new Headers(),
-    )
-  )
+  return new SimpleResponseError(new SimpleResponse(response.status, JSON.stringify({ error: body }), new Headers()))
 }
 
 function getSubjectFromJwt(agentInfo: AgentInfo): string | undefined {
@@ -558,8 +551,8 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
 
 function checkSarResponse(sarResponse: SimpleResponse) {
   if (!isSimpleResponse(sarResponse) || sarResponse.status < 200 || sarResponse.status >= 300) {
-     // If the SAR service itself returned a 500 or 400, reject it.
-     throw reject(sarResponse.status, { reason: `SAR Check Failed: ${sarResponse.body}` })
+    // If the SAR service itself returned a 500 or 400, reject it.
+    throw reject(sarResponse.status, { reason: `SAR Check Failed: ${sarResponse.body}` })
   }
 }
 
@@ -652,14 +645,14 @@ export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, ssl
         simpleResponse = error
       } else if (isError(error)) {
         const errorPayload = {
-          error: error.message
+          error: error.message,
         }
         simpleResponse = new SimpleResponse(502, JSON.stringify(errorPayload))
       } else {
         let errorMessage = 'An unexpected and unknown error occurred.'
         try {
           // Try to serialize the unknown error for better logging
-        errorMessage = `Unknown error: ${JSON.stringify(error)}`
+          errorMessage = `Unknown error: ${JSON.stringify(error)}`
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_) {
           // Fallback if serialization fails (e.g., circular references)

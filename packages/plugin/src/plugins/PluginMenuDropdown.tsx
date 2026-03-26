@@ -67,7 +67,7 @@ export const PluginMenuDropDown: React.FunctionComponent = () => {
           ref={toggleRef}
           onClick={onToggleClick}
           isExpanded={isOpen}
-          icon={<ModuleIcon/>}
+          icon={<ModuleIcon />}
         >
           {selected}
         </MenuToggle>

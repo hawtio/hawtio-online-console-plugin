@@ -21,7 +21,6 @@ import { log } from './globals'
 import { K8sPod } from './types'
 import { connectionService } from './connection-service'
 import { pluginHeaderDropdown, pluginHeaderDropdownId } from './plugins'
-import { Logger } from '@hawtio/react'
 
 const USER = 'auth-disabled'
 const AUTH_METHOD = 'NoAuth'

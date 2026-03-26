@@ -25,7 +25,7 @@ function podUid(pod: K8sPod | null): string | null {
 
 export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props => {
   const [isLoading, setLoading] = useState<boolean>(true)
-  const podIdRef = useRef<string|null>(podUid(props.obj))
+  const podIdRef = useRef<string | null>(podUid(props.obj))
   const [error, setError] = useState<Error | null>()
 
   // Ensure the correct theme for OpenShift version
@@ -51,7 +51,6 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
         setLoading(false)
       }
       awaitService(props.obj)
-
     } else if (podChanged) {
       /*
        * Ensure that we change state to refresh
@@ -60,7 +59,6 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
       setLoading(true)
       podIdRef.current = newId
     }
-
   }, [isLoading, props.obj])
 
   if (isLoading) {
@@ -89,4 +87,6 @@ export const HawtioMainTab: React.FunctionComponent<HawtioMainTabProps> = props 
   return <Hawtio />
 }
 
+// OpenShift Console plugin API strictly requires default exports for dynamic components
+// eslint-disable-next-line import/no-default-export
 export default HawtioMainTab

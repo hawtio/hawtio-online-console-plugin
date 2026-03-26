@@ -126,7 +126,7 @@ const common = (mode, publicPath, env) => {
         HAWTIO_ONLINE_PUBLIC_PATH: JSON.stringify(publicPath),
       }),
       new webpack.ProvidePlugin({
-        fetch: [ path.resolve(__dirname, 'src/scoped-fetch.ts'), 'scopedFetch' ],
+        fetch: [path.resolve(__dirname, 'src/scoped-fetch.ts'), 'scopedFetch'],
       }),
     ],
     output: {
@@ -142,7 +142,7 @@ const common = (mode, publicPath, env) => {
         // This tells Webpack:
         // Anytime code tries to import '@thumbmarkjs/thumbmarkjs', use this specific
         // file instead of trying to figure it out yourself.
-        '@thumbmarkjs/thumbmarkjs': thmarkEsmPath
+        '@thumbmarkjs/thumbmarkjs': thmarkEsmPath,
       },
       modules: ['node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx'],

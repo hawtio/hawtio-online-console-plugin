@@ -1,6 +1,21 @@
-import { MenuToggle, MenuToggleElement, PageSection, Select, SelectList, SelectOption, Title } from '@patternfly/react-core'
+import {
+  MenuToggle,
+  MenuToggleElement,
+  PageSection,
+  Select,
+  SelectList,
+  SelectOption,
+  Title,
+} from '@patternfly/react-core'
 import { CubesIcon } from '@patternfly/react-icons'
-import { k8sListItems, K8sModel, K8sResourceCommon, NamespaceBar, useActiveNamespace, useK8sModel } from '@openshift-console/dynamic-plugin-sdk'
+import {
+  k8sListItems,
+  K8sModel,
+  K8sResourceCommon,
+  NamespaceBar,
+  useActiveNamespace,
+  useK8sModel,
+} from '@openshift-console/dynamic-plugin-sdk'
 import { Fragment, Ref, useEffect, useState } from 'react'
 import './openshift-console-plugin.css'
 import './hawtiodiscover.css'
@@ -20,8 +35,7 @@ const noPods = 'None Available'
 const allNS = '#ALL_NS#'
 
 function podName(pod: K8sPod): string {
-  if (!pod.metadata || !pod.metadata.name)
-    return '<no pod metadata>'
+  if (!pod.metadata || !pod.metadata.name) return '<no pod metadata>'
 
   return pod.metadata.name
 }
@@ -44,9 +58,9 @@ async function fetchJolokiaPods(podModel: K8sModel, namespace: string): Promise<
   return pods
 }
 
-export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = props => {
+export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = () => {
   const [k8sPodModel] = useK8sModel({ group: 'core', version: 'v1', kind: 'Pod' })
-  const [k8sNSModel] = useK8sModel({ group: 'core', version: 'v1', kind: 'Namespace'})
+  const [k8sNSModel] = useK8sModel({ group: 'core', version: 'v1', kind: 'Namespace' })
 
   const [activeNamespace] = useActiveNamespace()
   const [namespace, setNamespace] = useState<string>(activeNamespace ?? '')
@@ -75,43 +89,44 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
       /*
        * Find pods in all namespaces
        */
-      k8sListItems({ model: k8sNSModel, queryParams: {} })
-        .then(async (response: K8sResourceCommon[]) => {
-          const jPods: K8sPod[] = []
-          for (const res of response) {
-            const ns: K8sNamespace = res as K8sNamespace
-            if (ns && ns.metadata && ns.metadata.name) {
-              const pods = await fetchJolokiaPods(k8sPodModel, ns.metadata.name)
-              jPods.push(...pods)
-            }
+      k8sListItems({ model: k8sNSModel, queryParams: {} }).then(async (response: K8sResourceCommon[]) => {
+        const jPods: K8sPod[] = []
+        for (const res of response) {
+          const ns: K8sNamespace = res as K8sNamespace
+          if (ns && ns.metadata && ns.metadata.name) {
+            const pods = await fetchJolokiaPods(k8sPodModel, ns.metadata.name)
+            jPods.push(...pods)
           }
+        }
 
-          setPods(jPods)
-          setSelectedPod(() => {
-            return jPods.length === 0 ? noPods : podName(jPods[0])
-          })
-          setLoading(false)
+        setPods(jPods)
+        setSelectedPod(() => {
+          return jPods.length === 0 ? noPods : podName(jPods[0])
         })
+        setLoading(false)
+      })
     } else {
       /*
        * Find pods in the selected namespace
        */
-      fetchJolokiaPods(k8sPodModel, namespace)
-        .then(pods => {
-          setPods(pods)
-          setSelectedPod(() => {
-            return pods.length === 0 ? noPods : podName(pods[0])
-          })
-          setLoading(false)
+      fetchJolokiaPods(k8sPodModel, namespace).then(pods => {
+        setPods(pods)
+        setSelectedPod(() => {
+          return pods.length === 0 ? noPods : podName(pods[0])
         })
+        setLoading(false)
+      })
     }
-  }, [ namespace ])
+  }, [namespace, k8sNSModel, k8sPodModel])
 
   const onToggleSelectPodClick = () => {
     setPodSelectIsOpen(!isPodSelectOpen)
   }
 
-  const onSelectPod = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelectPod = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined,
+  ) => {
     setSelectedPod(value as string)
     setPodSelectIsOpen(false)
   }
@@ -121,32 +136,21 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
   }
 
   const pageTitle = () => {
-    if (!selectedPod || selectedPod === noPods)
-      return ''
+    if (!selectedPod || selectedPod === noPods) return ''
 
     return selectedPod
   }
 
   const displayHawtio = () => {
-    if (!selectedPod || selectedPod === noPods)
-      return ( <DiscoverEmptyContent/> )
+    if (!selectedPod || selectedPod === noPods) return <DiscoverEmptyContent />
 
-    return (
-      <HawtioMainTab
-        ns={namespace}
-        name={selectedPod}
-        obj={k8sPod(pods, selectedPod)}
-      />
-    )
+    return <HawtioMainTab ns={namespace} name={selectedPod} obj={k8sPod(pods, selectedPod)} />
   }
 
   return (
     <Fragment>
-      <PageSection
-        id='hawtio-discover-namespace-section'
-        stickyOnBreakpoint={{ default: 'top' }} >
-        <NamespaceBar
-          onNamespaceChange={onNamespaceChange}>
+      <PageSection id='hawtio-discover-namespace-section' stickyOnBreakpoint={{ default: 'top' }}>
+        <NamespaceBar onNamespaceChange={onNamespaceChange}>
           <Select
             id='pod-select'
             className=''
@@ -164,43 +168,35 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = prop
                 ref={toggleRef}
                 onClick={onToggleSelectPodClick}
                 isExpanded={isPodSelectOpen}
-                icon={<CubesIcon/>}
+                icon={<CubesIcon />}
               >
                 Pod: {selectedPod}
               </MenuToggle>
             )}
           >
             <SelectList>
-              {
-                pods.length > 0 &&
-                  pods.map(pod => (
-                    <SelectOption
-                      value={podName(pod)}
-                      key={pod.metadata?.uid}
-                      isSelected={selectedPod === podName(pod)}
-                    >
-                      {podName(pod)}
-                    </SelectOption>
-                  ))
-              }
+              {pods.length > 0 &&
+                pods.map(pod => (
+                  <SelectOption value={podName(pod)} key={pod.metadata?.uid} isSelected={selectedPod === podName(pod)}>
+                    {podName(pod)}
+                  </SelectOption>
+                ))}
             </SelectList>
           </Select>
         </NamespaceBar>
       </PageSection>
 
-      <PageSection id='hawtio-discover-title-section' isFilled >
-        <Title headingLevel="h3">{pageTitle()}</Title>
+      <PageSection id='hawtio-discover-title-section' isFilled>
+        <Title headingLevel='h3'>{pageTitle()}</Title>
 
-        {isLoading && (
-          <ConsoleLoading />
-        )}
+        {isLoading && <ConsoleLoading />}
 
-        {!isLoading && (
-          displayHawtio()
-        )}
+        {!isLoading && displayHawtio()}
       </PageSection>
     </Fragment>
   )
 }
 
+// OpenShift Console plugin API strictly requires default exports for dynamic components
+// eslint-disable-next-line import/no-default-export
 export default HawtioDiscover

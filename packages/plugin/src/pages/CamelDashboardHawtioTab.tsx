@@ -1,15 +1,26 @@
 import React, { Ref, useEffect, useMemo, useState } from 'react'
-import { MenuToggle, MenuToggleElement, PageSection, Select, SelectList, SelectOption, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core'
+import {
+  MenuToggle,
+  MenuToggleElement,
+  PageSection,
+  Select,
+  SelectList,
+  SelectOption,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+} from '@patternfly/react-core'
 import { CubesIcon } from '@patternfly/react-icons'
 import '@hawtio/react/dist/index.css'
 import './openshift-console-plugin.css'
 import './hawtiomaintab.css'
 import './camel-dashboard-hawtio-tab.css'
 import { log } from '../globals'
-import { useK8sWatchResource, useK8sWatchResources } from '@openshift-console/dynamic-plugin-sdk'
+import { K8sOwnerResource, K8sPod } from '../types'
 import { connectionService } from '../connection-service'
 import { HawtioMainTab } from './HawtioMainTab'
 import { ConsoleLoading } from './ConsoleLoading'
+import { useK8sWatchResource, useK8sWatchResources } from '@openshift-console/dynamic-plugin-sdk'
 
 interface CamelApp {
   metadata?: {
@@ -40,20 +51,20 @@ interface CamelApp {
 
 interface CamelDashboardHawtioTabProps {
   obj?: CamelApp
-  customData?: any
+  customData?: unknown
 }
 
-function podUid(pod: any | null): string | null {
+function podUid(pod: K8sPod | null): string | null {
   if (!pod) return null
   return pod.metadata?.uid ?? null
 }
 
-function podName(pod: any | null): string {
+function podName(pod: K8sPod | null): string {
   if (!pod || !pod.metadata || !pod.metadata.name) return '<no pod>'
   return pod.metadata.name
 }
 
-function findPodByName(pods: any[], name: string): any | null {
+function findPodByName(pods: K8sPod[], name: string): K8sPod | null {
   return pods.find(p => podName(p) === name) ?? null
 }
 
@@ -83,7 +94,7 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
 
   // Get the owner resource (Deployment, StatefulSet, etc.)
   const ownerRef = props.obj?.metadata?.ownerReferences?.[0]
-  const [owner, ownerLoaded] = useK8sWatchResource<any>(
+  const [owner, ownerLoaded] = useK8sWatchResource<K8sOwnerResource>(
     ownerRef
       ? {
           name: ownerRef.name,
@@ -91,35 +102,36 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
           groupVersionKind: ownerGvk(ownerRef.kind),
           isList: false,
         }
-      : null
+      : null,
   )
 
   // Query pods using the owner's selector
   const resources = useK8sWatchResources<{
-    pods: any[]
+    pods: K8sPod[]
   }>({
-    pods: ownerLoaded && owner && owner.spec?.selector
-      ? {
-          isList: true,
-          groupVersionKind: {
-            group: '',
-            version: 'v1',
-            kind: 'Pod'
+    pods:
+      ownerLoaded && owner && owner.spec?.selector
+        ? {
+            isList: true,
+            groupVersionKind: {
+              group: '',
+              version: 'v1',
+              kind: 'Pod',
+            },
+            namespaced: true,
+            namespace: props.obj?.metadata?.namespace,
+            selector: owner.spec.selector,
+          }
+        : {
+            isList: true,
+            groupVersionKind: {
+              group: '',
+              version: 'v1',
+              kind: 'Pod',
+            },
+            namespaced: false,
+            namespace: '',
           },
-          namespaced: true,
-          namespace: props.obj?.metadata?.namespace,
-          selector: owner.spec.selector,
-        }
-      : {
-          isList: true,
-          groupVersionKind: {
-            group: '',
-            version: 'v1',
-            kind: 'Pod'
-          },
-          namespaced: false,
-          namespace: '',
-        }
   })
 
   // Filter pods to only those with Jolokia port - memoized to prevent unnecessary re-renders
@@ -136,7 +148,7 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
     } else {
       setSelectedPodName(null)
     }
-  }, [jolokiaPods.length])
+  }, [jolokiaPods, selectedPodName])
 
   // Get the currently selected pod
   const pod = selectedPodName ? findPodByName(jolokiaPods, selectedPodName) : null
@@ -146,7 +158,10 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
     setPodSelectIsOpen(!isPodSelectOpen)
   }
 
-  const onSelectPod = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelectPod = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined,
+  ) => {
     const newPodName = value as string
     if (newPodName !== selectedPodName) {
       setSelectedPodName(newPodName)
@@ -165,12 +180,8 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
       <PageSection>
         <div className='camel-dashboard-hawtio-tab__empty-state'>
           <div className='camel-dashboard-hawtio-tab__empty-state-content'>
-            <p className='camel-dashboard-hawtio-tab__empty-state-title'>
-              Hawtio is not available for this CamelApp.
-            </p>
-            <p className='camel-dashboard-hawtio-tab__empty-state-subtitle'>
-              No pods with Jolokia endpoint detected.
-            </p>
+            <p className='camel-dashboard-hawtio-tab__empty-state-title'>Hawtio is not available for this CamelApp.</p>
+            <p className='camel-dashboard-hawtio-tab__empty-state-subtitle'>No pods with Jolokia endpoint detected.</p>
           </div>
         </div>
       </PageSection>
@@ -207,11 +218,7 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
               >
                 <SelectList>
                   {jolokiaPods.map(p => (
-                    <SelectOption
-                      value={podName(p)}
-                      key={podUid(p)}
-                      isSelected={selectedPodName === podName(p)}
-                    >
+                    <SelectOption value={podName(p)} key={podUid(p)} isSelected={selectedPodName === podName(p)}>
                       {podName(p)}
                     </SelectOption>
                   ))}
@@ -221,13 +228,11 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
           </ToolbarContent>
         </Toolbar>
       )}
-      <HawtioMainTab
-        ns={props.obj?.metadata?.namespace ?? ''}
-        name={selectedPodName ?? ''}
-        obj={pod}
-      />
+      <HawtioMainTab ns={props.obj?.metadata?.namespace ?? ''} name={selectedPodName ?? ''} obj={pod} />
     </div>
   )
 }
 
+// OpenShift Console plugin API strictly requires default exports for dynamic components
+// eslint-disable-next-line import/no-default-export
 export default CamelDashboardHawtioTab

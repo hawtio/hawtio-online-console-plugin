@@ -5,8 +5,8 @@ import { getCSRFToken } from './utils/https'
 import { PLUGIN_BASE_PATH } from './constants'
 
 type HawtioFetchPath = {
-  path?: string,
-  regex: RegExp,
+  path?: string
+  regex: RegExp
 }
 
 type HawtioFetchPaths = Record<string, HawtioFetchPath>
@@ -16,7 +16,7 @@ const hawtioFetchPaths: HawtioFetchPaths = {
   presetConnections: { path: 'preset-connections', regex: /\/\/preset-connections$/ },
   hawtconfig: { path: 'hawtconfig.json', regex: /hawtconfig\.json$/ },
   sessionTimeout: { path: 'auth/config/session-timeout$1', regex: /auth\/config\/session-timeout(.*)/ },
-  management: { regex: /(.*\/gateway\/management\/.*)/ } // don't want to replace just track
+  management: { regex: /(.*\/gateway\/management\/.*)/ }, // don't want to replace just track
 }
 
 export const basePath = PLUGIN_BASE_PATH
@@ -50,8 +50,7 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
    */
   let isHawtioRequest = false
   for (const fetchPath of Object.values(hawtioFetchPaths)) {
-    if (! hawtioUrl.match(fetchPath.regex))
-      continue
+    if (!hawtioUrl.match(fetchPath.regex)) continue
 
     isHawtioRequest = true
 
@@ -73,6 +72,7 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
   // It IS an hawtio request. Handle the CSRF Token (Wait if needed)
   let token = getCSRFToken()
   if (!token) {
+    // eslint-disable-next-line no-console
     console.debug('(scoped-fetch) Token missing, waiting...')
     token = await waitForCsrfToken()
   }
@@ -97,34 +97,36 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
   /*
    * Handle Request objects to preserve Body/Method
    */
-   const fetchOptions = { ...init, headers }
-   if (input instanceof Request) {
-     // Explicitly carry over the method
-     if (!fetchOptions.method) {
-         fetchOptions.method = input.method
-     }
+  const fetchOptions = { ...init, headers }
+  if (input instanceof Request) {
+    // Explicitly carry over the method
+    if (!fetchOptions.method) {
+      fetchOptions.method = input.method
+    }
 
-     /*
-      * Explicitly carry over the body if it wasn't provided in 'init'
-      * Note: can't easily read 'input.body' if it's a stream,
-      * but can pass the Request object itself if hadn't changed the URL.
-      * Since CHANGED the URL, must create a new Request.
-      */
-     return window.fetch(new Request(hawtioUrl, {
-       method: fetchOptions.method,
-       headers: fetchOptions.headers,
-       body: init?.body, // If init has a body, use it
-       credentials: input.credentials,
-       cache: input.cache,
-       mode: input.mode,
-       redirect: input.redirect,
-       referrer: input.referrer,
-       referrerPolicy: input.referrerPolicy,
-       integrity: input.integrity,
-       keepalive: input.keepalive,
-       signal: input.signal,
-     }))
-   }
+    /*
+     * Explicitly carry over the body if it wasn't provided in 'init'
+     * Note: can't easily read 'input.body' if it's a stream,
+     * but can pass the Request object itself if hadn't changed the URL.
+     * Since CHANGED the URL, must create a new Request.
+     */
+    return window.fetch(
+      new Request(hawtioUrl, {
+        method: fetchOptions.method,
+        headers: fetchOptions.headers,
+        body: init?.body, // If init has a body, use it
+        credentials: input.credentials,
+        cache: input.cache,
+        mode: input.mode,
+        redirect: input.redirect,
+        referrer: input.referrer,
+        referrerPolicy: input.referrerPolicy,
+        integrity: input.integrity,
+        keepalive: input.keepalive,
+        signal: input.signal,
+      }),
+    )
+  }
 
   /*
    * Call the real window.fetch with new URL string and Headers

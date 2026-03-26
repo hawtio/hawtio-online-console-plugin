@@ -4,43 +4,43 @@
  * ===========================================
  */
 
- /* Strip the Hawtio page wrapper of its viewport-locking height */
- #hawtio-main-page {
-   min-height: 100%;
-   height: 100%;
-   display: flex;
-   flex-direction: column;
-   flex-grow: 1;
-   background-color: transparent !important;
+/* Strip the Hawtio page wrapper of its viewport-locking height */
+#hawtio-main-page {
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: transparent !important;
 
-   /* Override the PF6 CSS variables locally on this specific element */
-   --pf-v6-c-page--Height: auto !important;
-   --pf-v6-c-page--MinHeight: 0 !important;
+  /* Override the PF6 CSS variables locally on this specific element */
+  --pf-v6-c-page--Height: auto !important;
+  --pf-v6-c-page--MinHeight: 0 !important;
 
-   /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
-   --pf-v5-c-page--BackgroundColor: var(--hawtio-page--BackgroundColor) !important;
+  /* Ensure main page components in PF5 as either PF5/PF6 whichever used by the console */
+  --pf-v5-c-page--BackgroundColor: var(--hawtio-page--BackgroundColor) !important;
 
-   --pf-v5-c-page__main-section--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+  --pf-v5-c-page__main-section--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
 
-   /*
+  /*
     * If a react component has variant="light", this adds the .pf-m-light class.
     * This class forces the background to use the '--m-light--BackgroundColor' variable,
     * even if the theme is dark.
     * Override that variable here to point to hawtio's custom section color that observes the theme.
     */
-   --pf-v5-c-page__main-section--m-light--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
+  --pf-v5-c-page__main-section--m-light--BackgroundColor: var(--hawtio-section--BackgroundColor) !important;
 
-   --pf-v5-c-page__main-tabs--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
-   --pf-v5-c-tabs__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
-   --pf-v5-c-tabs--m-box__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
- }
+  --pf-v5-c-page__main-tabs--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+  --pf-v5-c-tabs__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+  --pf-v5-c-tabs--m-box__content--BackgroundColor: var(--hawtio-tabs--BackgroundColor) !important;
+}
 
 /* Neutralize the PF6 intermediary flex container */
 #hawtio-main-page > .pf-v6-c-page__main-container {
   display: flex;
   flex-grow: 1;
   overflow: visible !important;
-  margin-left: 0 /* Removes indentation from default pagen container */
+  margin-left: 0; /* Removes indentation from default pagen container */
 }
 
 /*
@@ -123,7 +123,6 @@
   border-bottom-color: lightgrey;
   border-bottom-width: thin;
   border-bottom-style: solid;
-
 }
 
 /*
@@ -144,7 +143,6 @@
   color: var(--hawtio-header--DropdownColor) !important;
 }
 
-
 #plugin-header-dropdown-toggle {
   /* Changes text colour of the plugin toolbar menu button */
   color: var(--hawtio-header--DropdownColor);
@@ -163,7 +161,10 @@
  */
 .gutter {
   /* Tries PF6 and fallback to PF5 */
-  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
+  background-color: var(
+    --pf-t--global--background--color--primary--default,
+    var(--pf-v5-c-page--BackgroundColor)
+  ) !important;
   border-left-color: lightgrey;
   border-left-style: solid;
   border-left-width: 1px;
@@ -187,12 +188,12 @@
  */
 #camel-tree-view .pf-v5-c-tree-view__node-toggle,
 #camel-tree-view .pf-v5-c-tree-view__node-text,
-#jmx-tree-view   .pf-v5-c-tree-view__node-toggle,
-#jmx-tree-view   .pf-v5-c-tree-view__node-text,
+#jmx-tree-view .pf-v5-c-tree-view__node-toggle,
+#jmx-tree-view .pf-v5-c-tree-view__node-text,
 #camel-tree-view .pf-v6-c-tree-view__node-toggle,
 #camel-tree-view .pf-v6-c-tree-view__node-text,
-#jmx-tree-view   .pf-v6-c-tree-view__node-toggle,
-#jmx-tree-view   .pf-v6-c-tree-view__node-text {
+#jmx-tree-view .pf-v6-c-tree-view__node-toggle,
+#jmx-tree-view .pf-v6-c-tree-view__node-text {
   border-color: transparent !important;
 }
 
@@ -210,13 +211,18 @@
  */
 .monaco-editor-background {
   /* Tries PF6 and fallback to PF5 */
-  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
-
+  background-color: var(
+    --pf-t--global--background--color--primary--default,
+    var(--pf-v5-c-page--BackgroundColor)
+  ) !important;
 }
 
 .monaco-editor .margin {
   /* Tries PF6 and fallback to PF5 */
-  background-color: var(--pf-t--global--background--color--primary--default, var(--pf-v5-c-page--BackgroundColor)) !important;
+  background-color: var(
+    --pf-t--global--background--color--primary--default,
+    var(--pf-v5-c-page--BackgroundColor)
+  ) !important;
 }
 
 /*
