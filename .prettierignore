@@ -5,3 +5,6 @@ dist
 
 # any directories specifically labelled ignore
 **/ignore/**
+
+# Intentional invalid file
+packages/gateway/src/jolokia-agent/test.invalid.ACL.yaml

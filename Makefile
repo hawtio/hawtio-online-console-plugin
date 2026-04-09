@@ -301,6 +301,30 @@ format-fix: setup
 
 #---
 #
+#@ test
+#
+#== Tests the build
+#
+#=== Calls setup
+#
+#---
+test: setup
+	yarn test
+
+#---
+#
+#@ test
+#
+#== Tests the build
+#
+#=== Calls setup
+#
+#---
+audit: setup
+	yarn npm audit --all
+
+#---
+#
 #@ license
 #
 #== Extracts all the licenses from the project and create a text file in docker/
