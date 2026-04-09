@@ -52,7 +52,7 @@
     "pluralize": "^8.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-router": "5.3.x",
+    "react-router": "7.14.x",
     "react-router-dom": "^5.3.x",
     "sass": "^1.84.0",
     "sass-loader": "^16.0.4",
