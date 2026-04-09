@@ -2048,7 +2048,7 @@ __metadata:
     "@patternfly/react-tokens": "npm:^6.4.0"
     "@types/jsonpath": "npm:^0.2.4"
     "@types/node": "npm:^20.14.9"
-    "@types/react": "npm:^17.0.37"
+    "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^17.0.26"
     "@types/react-router-dom": "npm:^5.3.3"
     compression-webpack-plugin: "npm:^11.1.0"
@@ -2067,7 +2067,7 @@ __metadata:
     mochawesome-merge: "npm:^4.3.0"
     monaco-editor: "npm:^0.53.0"
     pluralize: "npm:^8.0.0"
-    react: "npm:^17.0.1"
+    react: "npm:^19.2.5"
     react-dom: "npm:^17.0.1"
     react-router: "npm:5.3.x"
     react-router-dom: "npm:^5.3.x"
@@ -14951,6 +14951,13 @@ __metadata:
     loose-envify: "npm:^1.1.0"
     object-assign: "npm:^4.1.1"
   checksum: 10/ece60c31c1d266d132783aaaffa185d2e4c9b4db144f853933ec690cee1e0600c8929a1dd0a9e79323eea8e2df636c9a06d40f6cfdc9f797f65225433e67f707
+  languageName: node
+  linkType: hard
+
+"react@npm:^19.2.5":
+  version: 19.2.5
+  resolution: "react@npm:19.2.5"
+  checksum: 10/1c3c7ffecb90b7f89a5c3ef635e6811f3a84600097f203b918150cb7e6b0a52915e858e5b4c82317a520dffccfa46ee4819ccf92c59c5b2d6c25cffe258dd20c
   languageName: node
   linkType: hard
 
