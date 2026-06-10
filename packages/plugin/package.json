@@ -54,7 +54,7 @@
     "react-dom": "^17.0.1",
     "react-router": "5.3.x",
     "react-router-dom": "^5.3.x",
-    "sass": "^1.84.0",
+    "sass": "^1.99.0",
     "sass-loader": "^16.0.4",
     "source-map-loader": "^5.0.0",
     "stream-http": "^3.2.0",
