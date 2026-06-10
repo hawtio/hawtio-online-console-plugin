@@ -2005,10 +2005,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hawtio/camel-model-v4_18@npm:@hawtio/camel-model@~4.18.0":
-  version: 4.18.0
-  resolution: "@hawtio/camel-model@npm:4.18.0"
-  checksum: 10/090915fd8e88f501294fd8fb008dbe2ed7084c0552149a5d9dba48d3984b67810db6ca128a9b60524d2f5add333935a827471232e8b325c196c432fc5dbc5a0a
+"@hawtio/camel-model-v4_18@npm:@hawtio/camel-model@~4.18.1":
+  version: 4.18.1
+  resolution: "@hawtio/camel-model@npm:4.18.1"
+  checksum: 10/04ad3639e68e887a1b74f4f7ea080e5b01fc8de4182eb935698b51cd89b585a4150bd1d5e727f59c5ad19455d24bc3a39c2f63a4f8fc51cc316a0c5d2de3439a
   languageName: node
   linkType: hard
 
@@ -2035,7 +2035,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hawtio/online-console-plugin@workspace:packages/plugin"
   dependencies:
-    "@hawtio/react": "npm:2.0.0-react17.memoryrouter.dev.1"
+    "@hawtio/react": "npm:2.3.0-react17.memoryrouter"
     "@openshift-console/dynamic-plugin-sdk": "npm:4.21.0"
     "@openshift-console/dynamic-plugin-sdk-webpack": "npm:4.21.0"
     "@patternfly/patternfly": "npm:^6.4.0"
@@ -2144,24 +2144,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hawtio/react@npm:2.0.0-react17.memoryrouter.dev.1":
-  version: 2.0.0-react17.memoryrouter.dev.1
-  resolution: "@hawtio/react@npm:2.0.0-react17.memoryrouter.dev.1"
+"@hawtio/react@npm:2.3.0-react17.memoryrouter":
+  version: 2.3.0-react17.memoryrouter
+  resolution: "@hawtio/react@npm:2.3.0-react17.memoryrouter"
   dependencies:
     "@hawtio/camel-model-v4_14": "npm:@hawtio/camel-model@~4.14.5"
-    "@hawtio/camel-model-v4_18": "npm:@hawtio/camel-model@~4.18.0"
-    "@jolokia.js/simple": "npm:^2.5.0"
+    "@hawtio/camel-model-v4_18": "npm:@hawtio/camel-model@~4.18.1"
+    "@jolokia.js/simple": "npm:^2.6.0"
     "@module-federation/utilities": "npm:^3.1.77"
     "@monaco-editor/react": "npm:^4.7.0"
-    "@thumbmarkjs/thumbmarkjs": "npm:^1.7.6"
+    "@thumbmarkjs/thumbmarkjs": "npm:^1.9.1"
     dagre: "npm:^0.8.5"
-    dompurify: "npm:^3.3.3"
+    dompurify: "npm:^3.4.8"
     eventemitter3: "npm:^5.0.4"
-    jolokia.js: "npm:^2.5.0"
+    jolokia.js: "npm:^2.6.0"
     js-logger: "npm:^1.6.1"
     jwt-decode: "npm:^4.0.0"
-    keycloak-js: "npm:^26.2.3"
-    oauth4webapi: "npm:^3.8.5"
+    keycloak-js: "npm:^26.2.4"
+    oauth4webapi: "npm:^3.8.6"
     react-markdown: "npm:^8.0.7"
     react-split: "npm:^2.0.14"
     reactflow: "npm:^11.11.4"
@@ -2185,7 +2185,7 @@ __metadata:
   peerDependenciesMeta:
     keycloak-js:
       optional: true
-  checksum: 10/a0a7a9fde041f4a8e19779fb6f3c6aa0e9fbc18e63c042fb740f7c94b3793ba13e45502ae0745f50796f84577d7ff56297235da0bcae4c0b16ba33ed21374bae
+  checksum: 10/ac941538a054a2ff2985ee7ccbe01500ac829691a85430c5ab5a089c6fb07b2169d6351e68705ec00330cb1ca18c7c71ea1799f73f85251ebcb8c8e2e247de20
   languageName: node
   linkType: hard
 
@@ -2573,12 +2573,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jolokia.js/simple@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "@jolokia.js/simple@npm:2.5.0"
+"@jolokia.js/simple@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "@jolokia.js/simple@npm:2.6.0"
   dependencies:
-    jolokia.js: "npm:2.5.0"
-  checksum: 10/fe119f484bdbcc5bf7802cfec1f0a178f2c2b9ceef17fdfd60c3898061fc5b1b912d35808c394ef0fee0a05fa0355cba0ebff7150493921c4ec8f9ad25d28145
+    jolokia.js: "npm:2.6.0"
+  checksum: 10/088c3c5f96cf5484a44923b2b8af6cf62effe1fae34c265aefce710e6977741a090f68fb748640c19000f929dbfb423d258e21aec67d32e8a38eab8acde704db
   languageName: node
   linkType: hard
 
@@ -3953,10 +3953,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@thumbmarkjs/thumbmarkjs@npm:^1.7.6":
-  version: 1.7.6
-  resolution: "@thumbmarkjs/thumbmarkjs@npm:1.7.6"
-  checksum: 10/22a5cb513f46eec0dd72ef1f9a2726ec76234084f94463614262cf54a319f6bbff2fcfda03217cc42aec3f7e32d2166284cdf85fcd8840ac421e8ec0505c40ba
+"@thumbmarkjs/thumbmarkjs@npm:^1.9.1":
+  version: 1.9.1
+  resolution: "@thumbmarkjs/thumbmarkjs@npm:1.9.1"
+  checksum: 10/2243b3e36e4c5547dc92fde6e0a16e100a6ebb3de3fee007001823a0af9e0e45b70171a24a0bbddf4562d32eba306425922eae79bfae73f0c62fd2689423ba67
   languageName: node
   linkType: hard
 
@@ -8470,15 +8470,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.3.3":
-  version: 3.4.1
-  resolution: "dompurify@npm:3.4.1"
+"dompurify@npm:^3.4.8":
+  version: 3.4.9
+  resolution: "dompurify@npm:3.4.9"
   dependencies:
     "@types/trusted-types": "npm:^2.0.7"
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: 10/dcaf945376eff2a61841b205501b163b2c8ae9afe7251e68276b561d9fcf943cefc67e2631fdeae080b52a8b37c96e6beb7e6ae80ad8a83692ff67965dd6b4db
+  checksum: 10/2d651dcf413646e4a66202b424eade1f2a793fb22fe83dcb5a0800349ad879344fd92e76fd494ef06fb10ecb051660207844e7900156cef3e61942fdac405aa0
   languageName: node
   linkType: hard
 
@@ -11934,7 +11934,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jolokia.js@npm:2.5.0, jolokia.js@npm:^2.4.2, jolokia.js@npm:^2.5.0":
+"jolokia.js@npm:2.6.0, jolokia.js@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "jolokia.js@npm:2.6.0"
+  checksum: 10/210cf756eb4779771ef7b5dad4262e9627d96184a8656ee7fa82c5b77ba1b9b64d2f0c73141faa039ab5cf5f7762db820fe4c1aef50c8d0a0784af8b225dd3c8
+  languageName: node
+  linkType: hard
+
+"jolokia.js@npm:^2.4.2":
   version: 2.5.0
   resolution: "jolokia.js@npm:2.5.0"
   checksum: 10/218c689b8fe0412bd652d18134f5634f14cd8d939c00bc787581eae5105b0b5fb83a7e0c6a06a883674e5059941ddf8a2e38ddad33a2711cf781002be9b9e722
@@ -12111,10 +12118,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"keycloak-js@npm:^26.2.3":
-  version: 26.2.3
-  resolution: "keycloak-js@npm:26.2.3"
-  checksum: 10/8718782ee0a3bde35c76fbe7fcb35d4456f4fa50628ef3fe5d69a9ed301a26ce5a7d8f6912614d65a46145d9cf19d2858ba11a5eda52d4654850bef6457f261c
+"keycloak-js@npm:^26.2.4":
+  version: 26.2.4
+  resolution: "keycloak-js@npm:26.2.4"
+  checksum: 10/d12e595486160267b18d845e6587303298d38488161a9aaa4679a530315404078bdedf74d3e01f7472585f80983ce65b4b49fc323ceade2329e36c1507dc606c
   languageName: node
   linkType: hard
 
@@ -13574,10 +13581,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oauth4webapi@npm:^3.8.5":
-  version: 3.8.5
-  resolution: "oauth4webapi@npm:3.8.5"
-  checksum: 10/5c39d4dbd95b795438e79444a1d710631b3f8311e8b8913150b385b5815857b32f617a49d4869a4476b2318f614adfbc9d19510360df198719973f6f69a2e75b
+"oauth4webapi@npm:^3.8.6":
+  version: 3.8.6
+  resolution: "oauth4webapi@npm:3.8.6"
+  checksum: 10/980568a712c9ac6afaa35bea4b8887accfa37470fbceec6c833edad74cf82a9c981aacdbb4f270dcbc27c2a5af9b3a2d2c48ae98e51df7a278985c5f00631410
   languageName: node
   linkType: hard
 
