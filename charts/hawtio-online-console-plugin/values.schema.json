@@ -62,6 +62,15 @@
             }
           }
         },
+        "log": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string",
+              "description": "Log level (e.g. info, debug)"
+            }
+          }
+        },
         "securityContext": {
           "type": "object",
           "properties": {

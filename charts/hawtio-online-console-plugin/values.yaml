@@ -20,6 +20,11 @@ plugin:
       name: hawtio-online-console-plugin-serving
   service:
     port: 9443
+  log:
+    # level:        Set whether the logging level of the online plugin
+    #                  [ info | debug ]
+    #                  (info by default)
+    level: info
   securityContext:
     enabled: true
   jobs:
@@ -59,6 +64,9 @@ gateway:
     rbac:
       name: hawtio-online-console-plugin-rbac
   log:
+    # level:        Set whether the logging level of the online gateway
+    #                  [ info | debug ]
+    #                  (info by default)
     level: info
     # Mask IP addresses in application responses [ true | false ]
     maskIPAddresses: false
