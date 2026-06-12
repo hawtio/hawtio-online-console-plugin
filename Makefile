@@ -57,6 +57,8 @@ PLUGIN := plugin
 GATEWAY_ROUTE := gateway-route
 
 MASK_IP_ADDRESSES_PATCH := $(PATCHES)/patch-mask-ip-addresses.yml
+ONLINE_LOG_LEVEL_PATCH := $(PATCHES)/patch-online-log-level.yml
+GATEWAY_LOG_LEVEL_PATCH := $(PATCHES)/patch-gateway-log-level.yml
 
 #
 # =======================
@@ -82,6 +84,10 @@ NAMESPACE ?= hawtio-online
 UNINSTALL_ALL ?=false
 # Whether to mask ip addresses in network responses
 MASK_IP_ADDRESSES ?= false
+# The Log Level of the hawtio-online server
+ONLINE_LOG_LEVEL ?= info
+# The Log Level of the hawtio gateway server
+GATEWAY_LOG_LEVEL ?= info
 
 #
 # =======================
@@ -401,6 +407,22 @@ else
 	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),remove,../../$(MASK_IP_ADDRESSES_PATCH),Deployment)
 endif
 
+.onlineLogLevel:
+	@sed -i 's~.*value:.*~            value: "$(ONLINE_LOG_LEVEL)"~' "$(DEPLOY)/$(ONLINE_LOG_LEVEL_PATCH)"
+ifeq ($(ONLINE_LOG_LEVEL), info)
+	@$(call add-remove-kind-patch,$(BASE)/$(PLUGIN),remove,../../$(ONLINE_LOG_LEVEL_PATCH),Deployment)
+else
+	@$(call add-remove-kind-patch,$(BASE)/$(PLUGIN),add,../../$(ONLINE_LOG_LEVEL_PATCH),Deployment)
+endif
+
+.gatewayLogLevel:
+	@sed -i 's~.*value:.*~            value: "$(GATEWAY_LOG_LEVEL)"~' "$(DEPLOY)/$(GATEWAY_LOG_LEVEL_PATCH)"
+ifeq ($(GATEWAY_LOG_LEVEL), info)
+	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),remove,../../$(GATEWAY_LOG_LEVEL_PATCH),Deployment)
+else
+	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),add,../../$(GATEWAY_LOG_LEVEL_PATCH),Deployment)
+endif
+
 #---
 #
 #@ install-gateway
@@ -414,6 +436,9 @@ endif
 #
 #* PARAMETERS:
 #** NAMESPACE:               Set the namespace for the resources
+#** GATEWAY_LOG_LEVEL:       Set whether the logging level of the online server
+#**                            [ info | debug | trace ]
+#**                            (info by default)
 #** CUSTOM_GATEWAY_IMAGE:    Set a custom gateway image to install from
 #** CUSTOM_GATEWAY_VERSION:  Set a custom gateway version to install from
 #** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
@@ -426,6 +451,8 @@ install-gateway: kustomize kubectl jq
 	@$(call set-kustomize-gateway-image,$(BASE)/$(GATEWAY))
 # Mask IP addresses if required
 	@$(MAKE) .mask-ip-addresses
+# Update the log level of the gateway server
+	@$(MAKE) -s .gatewayLogLevel
 #
 # Build the resources
 # Either apply to the cluster or output to CLI
@@ -493,6 +520,9 @@ endif
 #
 #* PARAMETERS:
 #** NAMESPACE:               Set the namespace for the resources
+#** ONLINE_LOG_LEVEL:        Set whether the logging level of the online server
+#**                            [ emerg | alert | crit | error | warn | notice | info ]
+#**                            (info by default)
 #** CUSTOM_PLUGIN_IMAGE:     Set a custom plugin image to install from
 #** CUSTOM_PLUGIN_VERSION:   Set a custom plugin version to install from
 #** DRY_RUN:                 Print the resources to be applied instead of applying them [ true | false ]
@@ -503,6 +533,8 @@ install-plugin: kustomize kubectl jq
 	@$(call set-kustomize-namespace,$(BASE)/$(PLUGIN))
 # Set the image references of the kustomization
 	@$(call set-kustomize-plugin-image,$(BASE)/$(PLUGIN))
+# Update the log level of the online server
+	@$(MAKE) -s .onlineLogLevel
 #
 # Build the resources
 # Either apply to the cluster or output to CLI
