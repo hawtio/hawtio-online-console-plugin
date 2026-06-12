@@ -396,7 +396,6 @@ generate-proxying: check-admin
 
 .mask-ip-addresses:
 ifeq ($(MASK_IP_ADDRESSES), true)
-	echo "HELLO $(MASK_IP_ADDRESSES)"
 	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),add,../../$(MASK_IP_ADDRESSES_PATCH),Deployment)
 else
 	@$(call add-remove-kind-patch,$(BASE)/$(GATEWAY),remove,../../$(MASK_IP_ADDRESSES_PATCH),Deployment)
