@@ -14,7 +14,7 @@ process.env.LOG_LEVEL = 'trace'
 import request from 'supertest'
 import path from 'path'
 import { CLUSTER_BASE_ADDRESS, CLUSTER_HOST, CLUSTER_PORT, runningClusterServer, jolokiaUri, testData } from './testing'
-import { processRBACEnvVar, isOptimisedCachedDomains, setClusterAddr } from './jolokia-agent'
+import { processRBACEnvVar, isOptimisedCachedDomains, setClusterAddr, clearCaches } from './jolokia-agent'
 import { cloneObject } from './utils'
 
 process.env['HAWTIO_ONLINE_GATEWAY_APP_PORT'] = '11443'
@@ -89,6 +89,9 @@ beforeEach(() => {
    */
   testData.pod.resource.status.podIP = CLUSTER_HOST
   testData.metadata.jolokia.port = CLUSTER_PORT
+
+  // Clear the caches
+  clearCaches()
 })
 
 function appPost(uri: string, body: Record<string, unknown> | Record<string, unknown>[]) {
@@ -118,6 +121,9 @@ describe.each([
     testData.authorization.viewerAllowed = true
     if (rbac) processRBACEnvVar(defaultACLFile)
     else processRBACEnvVar(defaultACLFile, 'disabled')
+
+    // Clear the caches
+    clearCaches()
   })
 
   it(`${testAuth}: Bare path`, async () => {

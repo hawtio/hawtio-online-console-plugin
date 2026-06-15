@@ -2,6 +2,7 @@ import yaml from 'yaml'
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
 import fetch, { Response as FetchResponse } from 'node-fetch'
 import { jwtDecode } from 'jwt-decode'
+import { LRUCache } from 'lru-cache'
 import * as fs from 'fs'
 import https from 'https'
 import { JolokiaRequest as MBeanRequest } from 'jolokia.js'
@@ -21,8 +22,33 @@ import {
   fromFetchHeaders,
 } from './globals'
 import * as RBAC from './rbac'
+import { createHash } from 'crypto'
 
 const DEFAULT_ACL_FILE_PATH = `${__dirname}/ACL.yaml`
+
+// Define Caches
+const podIpCache = new LRUCache<string, Promise<string>>({
+  max: 500,
+  ttl: 1000 * 60, // 60 seconds
+})
+
+// Cache the boolean 'allowed' status
+const rbacCache = new LRUCache<string, Promise<SimpleResponse>>({
+  max: 1000,
+  ttl: 1000 * 10, // 10 seconds
+})
+
+function clearCaches() {
+  podIpCache.clear()
+  rbacCache.clear()
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
+}
+
+// Export caches for testing
+export { podIpCache, rbacCache, clearCaches }
 
 class SimpleResponseError extends Error {
   response: SimpleResponse
@@ -193,104 +219,167 @@ function getSubjectFromJwt(agentInfo: AgentInfo): string | undefined {
 async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo): Promise<SimpleResponse> {
   logger.trace('(jolokia-agent) selfLocalSubjectAccessReview ....')
 
-  let api
-  let body
-  // When form is used, don't rely on OpenShift-specific LocalSubjectAccessReview
-  if (useForm) {
-    api = 'authorization.k8s.io'
-    body = {
-      kind: 'LocalSubjectAccessReview',
-      apiVersion: 'authorization.k8s.io/v1',
-      metadata: {
-        namespace: agentInfo.namespace,
-      },
-      spec: {
-        user: getSubjectFromJwt(agentInfo) || '',
-        resourceAttributes: {
-          verb: verb,
-          resource: 'pods',
-          name: agentInfo.pod,
+  // Cache key must include user's token (from Authorization header).
+  // Nginx used: $uri$is_args$args|$http_authorization
+  const authToken = agentInfo.request.header('Authorization') || 'anon'
+  const cacheKey = `${verb}:${agentInfo.namespace}:${agentInfo.pod}:${authToken}`
+  logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview cache key: ${cacheKey}`)
+
+  if (rbacCache.has(cacheKey)) {
+    const response = rbacCache.get(cacheKey)!
+    logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview Hit for RBAC: ${cacheKey} -> ${response}`)
+    return response
+  }
+
+  //
+  // Protects against cache stampede problem
+  //
+  // Request 1 arrives, sees a cache miss, creates a fetch Promise,
+  // and immediately drops that Promise object into the LRU cache.
+  //
+  // Requests 2 through 30 arrive a millisecond later. They check the
+  // cache and find the exact same Promise object already sitting there.
+  // They all .then() or await on the identical Promise.
+  //
+  // When the underlying network request resolves, it resolves for all
+  // 30 requests simultaneously.
+  //
+  const sarPromise = (async () => {
+    let api
+    let body
+    // When form is used, don't rely on OpenShift-specific LocalSubjectAccessReview
+    if (useForm) {
+      api = 'authorization.k8s.io'
+      body = {
+        kind: 'LocalSubjectAccessReview',
+        apiVersion: 'authorization.k8s.io/v1',
+        metadata: {
           namespace: agentInfo.namespace,
         },
-      },
+        spec: {
+          user: getSubjectFromJwt(agentInfo) || '',
+          resourceAttributes: {
+            verb: verb,
+            resource: 'pods',
+            name: agentInfo.pod,
+            namespace: agentInfo.namespace,
+          },
+        },
+      }
+    } else {
+      api = 'authorization.openshift.io'
+      body = {
+        kind: 'LocalSubjectAccessReview',
+        apiVersion: 'authorization.openshift.io/v1',
+        namespace: agentInfo.namespace,
+        verb: verb,
+        resource: 'pods',
+        name: agentInfo.pod,
+      }
     }
-  } else {
-    api = 'authorization.openshift.io'
-    body = {
-      kind: 'LocalSubjectAccessReview',
-      apiVersion: 'authorization.openshift.io/v1',
-      namespace: agentInfo.namespace,
-      verb: verb,
-      resource: 'pods',
-      name: agentInfo.pod,
+    const json = JSON.stringify(body)
+
+    // /apis/authorization.k8s.io/v1/namespaces/{namespace}/localsubjectaccessreviews
+    const authUri = joinPaths(
+      getClusterAddr(),
+      'apis',
+      api,
+      'v1',
+      'namespaces',
+      agentInfo.namespace,
+      'localsubjectaccessreviews',
+    )
+
+    logger.trace(`(jolokia-agent) Verifying authorization at uri ${authUri}`)
+
+    const fetchResponse = await fetch(authUri, {
+      method: 'POST',
+      body: json,
+      headers: toFetchHeaders(agentInfo.requestHeaders),
+      agent: new https.Agent({
+        cert: agentInfo.sslOptions.certCA,
+        rejectUnauthorized: false,
+        keepAlive: false,
+      }),
+    })
+
+    if (!fetchResponse.ok) {
+      logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${fetchResponse.status})`)
+      throw await rejectResponse(fetchResponse)
     }
-  }
-  const json = JSON.stringify(body)
 
-  // /apis/authorization.k8s.io/v1/namespaces/{namespace}/localsubjectaccessreviews
-  const authUri = joinPaths(
-    getClusterAddr(),
-    'apis',
-    api,
-    'v1',
-    'namespaces',
-    agentInfo.namespace,
-    'localsubjectaccessreviews',
-  )
+    const data = await fetchResponse.json()
+    const sar = isObject(data) ? data : JSON.parse(data as string)
 
-  logger.trace(`(jolokia-agent) Verifying authorization at uri ${authUri}`)
+    logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview sar: (${printObject(sar)})`)
 
-  const fetchResponse = await fetch(authUri, {
-    method: 'POST',
-    body: json,
-    headers: toFetchHeaders(agentInfo.requestHeaders),
-    agent: new https.Agent({
-      cert: agentInfo.sslOptions.certCA,
-      rejectUnauthorized: false,
-      keepAlive: false,
-    }),
-  })
+    // Cache the response
+    const allowed = useForm ? sar.status.allowed : sar.allowed
+    return new SimpleResponse(fetchResponse.status, allowed.toString(), fromFetchHeaders(fetchResponse.headers))
+  })()
 
-  if (!fetchResponse.ok) {
-    logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${fetchResponse.status})`)
-    throw await rejectResponse(fetchResponse)
-  }
+  // Evict the promise from cache immediately if the network request fails
+  // so subsequent retries aren't permanently locked into a broken state
+  sarPromise.catch(() => rbacCache.delete(cacheKey))
 
-  const data = await fetchResponse.json()
-  const sar = isObject(data) ? data : JSON.parse(data as string)
-
-  logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview sar: (${printObject(sar)})`)
-  return new SimpleResponse(
-    fetchResponse.status,
-    (useForm ? sar.status.allowed : sar.allowed).toString(),
-    fromFetchHeaders(fetchResponse.headers),
-  )
+  rbacCache.set(cacheKey, sarPromise)
+  return sarPromise
 }
 
 async function getPodIP(agentInfo: AgentInfo): Promise<string> {
-  logger.trace('(jolokia-agent) getPodIP ....')
+  const cacheKey = `${agentInfo.namespace}/${agentInfo.pod}`
+  logger.trace(`(jolokia-agent) getPodIP cache key: ${cacheKey}`)
 
-  // /api/v1/namespaces/$1/pods/$2
-  const podIPUri = joinPaths(getClusterAddr(), 'api', 'v1', 'namespaces', agentInfo.namespace, 'pods', agentInfo.pod)
-
-  logger.trace(`(jolokia-agent) Getting pod ip from uri ${podIPUri}`)
-
-  const fetchResponse = await fetch(podIPUri, {
-    method: 'GET',
-    headers: toFetchHeaders(agentInfo.requestHeaders),
-    agent: new https.Agent({
-      cert: agentInfo.sslOptions.certCA,
-      rejectUnauthorized: false,
-      keepAlive: false,
-    }),
-  })
-  if (!fetchResponse.ok) {
-    throw await rejectResponse(fetchResponse)
+  if (podIpCache.has(cacheKey)) {
+    logger.trace(`(jolokia-agent) getPodIP hit for PodIP: ${cacheKey}`)
+    return podIpCache.get(cacheKey)!
   }
 
-  const json = await fetchResponse.json()
-  const data = isObject(json) ? json : JSON.parse(json as string)
-  return data.status.podIP
+  logger.trace('(jolokia-agent) getPodIP ....')
+
+  //
+  // Protects against cache stampede problem
+  //
+  // Request 1 arrives, sees a cache miss, creates a fetch Promise,
+  // and immediately drops that Promise object into the LRU cache.
+  //
+  // Requests 2 through 30 arrive a millisecond later. They check the
+  // cache and find the exact same Promise object already sitting there.
+  // They all .then() or await on the identical Promise.
+  //
+  // When the underlying network request resolves, it resolves for all
+  // 30 requests simultaneously.
+  //
+  const ipPromise = (async () => {
+    // /api/v1/namespaces/$1/pods/$2
+    const podIPUri = joinPaths(getClusterAddr(), 'api', 'v1', 'namespaces', agentInfo.namespace, 'pods', agentInfo.pod)
+
+    logger.trace(`(jolokia-agent) Getting pod ip from uri ${podIPUri}`)
+
+    const fetchResponse = await fetch(podIPUri, {
+      method: 'GET',
+      headers: toFetchHeaders(agentInfo.requestHeaders),
+      agent: new https.Agent({
+        cert: agentInfo.sslOptions.certCA,
+        rejectUnauthorized: false,
+        keepAlive: false,
+      }),
+    })
+    if (!fetchResponse.ok) {
+      throw await rejectResponse(fetchResponse)
+    }
+
+    const json = await fetchResponse.json()
+    const data = isObject(json) ? json : JSON.parse(json as string)
+    return data.status.podIP
+  })()
+
+  // Evict the promise from cache immediately if the network request fails
+  // so subsequent retries aren't permanently locked into a broken state
+  ipPromise.catch(() => podIpCache.delete(cacheKey))
+
+  podIpCache.set(cacheKey, ipPromise)
+  return ipPromise
 }
 
 async function callJolokiaAgent(

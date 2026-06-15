@@ -52,6 +52,21 @@ export const testData = {
       },
     },
   },
+  pod2: {
+    name: 'camelapp-67890def',
+    resource: {
+      kind: 'Pod',
+      apiVersion: 'v1',
+      metadata: {
+        name: 'camelapp-67890def',
+      },
+      status: {
+        phase: 'Running',
+        hostIP: '192.168.126.11',
+        podIP: '10.217.1.210',
+      },
+    },
+  },
   jolokia: {
     search: {
       request: {
@@ -381,4 +396,8 @@ export const testData = {
 
 export function jolokiaUri() {
   return `https:${testData.pod.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
+}
+
+export function jolokiaUri2() {
+  return `https:${testData.pod2.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
 }

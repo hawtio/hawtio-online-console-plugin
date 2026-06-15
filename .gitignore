@@ -44,3 +44,4 @@ tls-certificates/*.srl
 
 charts/publish
 charts/patching
+.aider*

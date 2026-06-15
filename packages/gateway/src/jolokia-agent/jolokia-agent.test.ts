@@ -25,8 +25,9 @@ import {
   runningClusterServer,
   jolokiaUri,
   testData,
+  jolokiaUri2,
 } from '../testing'
-import { processRBACEnvVar, proxyJolokiaAgent } from './jolokia-agent'
+import { processRBACEnvVar, proxyJolokiaAgent, podIpCache, rbacCache, clearCaches } from './jolokia-agent'
 import { isOptimisedCachedDomains, setClusterAddr, SSLOptions } from './globals'
 import { cloneObject } from '../utils'
 
@@ -162,6 +163,9 @@ describe.each([
      */
     testData.pod.resource.status.podIP = CLUSTER_HOST
     testData.metadata.jolokia.port = CLUSTER_PORT
+
+    // Clear the caches
+    clearCaches()
   })
 
   it(`${testAuth}: Bare path`, async () => {
@@ -344,6 +348,15 @@ describe('masking ip addresses', () => {
     testData.authorization.adminAllowed = true
     testData.authorization.viewerAllowed = true
     processRBACEnvVar(defaultACLFile)
+
+    /*
+     * Override jolokia URI components so that the final
+     * jolokia request is circled back to the cluster test server
+     */
+    testData.pod.resource.status.podIP = CLUSTER_HOST
+    testData.metadata.jolokia.port = CLUSTER_PORT
+
+    clearCaches()
   })
 
   afterEach(() => {
@@ -380,5 +393,202 @@ describe('masking ip addresses', () => {
           expect(k).toContain('***.***.***.***')
         }
       })
+  })
+})
+
+describe('LRUCache Tests', () => {
+  beforeEach(() => {
+    // Reset TestOptions
+    testData.authorization.forbidden = false
+    testData.authorization.adminAllowed = true
+    testData.authorization.viewerAllowed = true
+    processRBACEnvVar(defaultACLFile)
+
+    /*
+     * Override jolokia URI components so that the final
+     * jolokia request is circled back to the cluster test server
+     */
+    testData.pod.resource.status.podIP = CLUSTER_HOST
+    testData.metadata.jolokia.port = CLUSTER_PORT
+
+    // Clear the caches
+    clearCaches()
+  })
+
+  describe('podIpCache', () => {
+    // Spy on cache operations
+    const origPodIpCacheGet = podIpCache.get
+    const origPodIpCacheSet = podIpCache.set
+
+    beforeEach(() => {
+      podIpCache.get = jest.fn(origPodIpCacheGet)
+      podIpCache.set = jest.fn(origPodIpCacheSet)
+    })
+
+    afterEach(() => {
+      // Restore original methods
+      podIpCache.get = origPodIpCacheGet
+      podIpCache.set = origPodIpCacheSet
+    })
+
+    it('should cache pod IP on first request', async () => {
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+      const response1 = await appPost(path, testData.jolokia.listMBeans.request)
+      expect(response1.status).toBe(200)
+      // No pod ip will have been cached
+      expect(podIpCache.get).toHaveBeenCalledTimes(0)
+      // pod ip will be cached
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+
+      // Second request should use cached IP
+      const response2 = await appPost(path, testData.jolokia.listMBeans.request)
+      expect(response2.status).toBe(200)
+      // Pod ip fetched from cache
+      expect(podIpCache.get).toHaveBeenCalledTimes(1)
+      // No new caching as ip returned from cache
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+    })
+
+    it('should return cached pod IP on subsequent requests', async () => {
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      // First request - cache miss
+      const response1 = await appPost(path, testData.jolokia.listMBeans.request)
+      expect(response1.status).toBe(200)
+      expect(podIpCache.get).toHaveBeenCalledTimes(0)
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+
+      // Second request - cache hit
+      const response2 = await appPost(path, testData.jolokia.listMBeans.request)
+      expect(response2.status).toBe(200)
+      expect(podIpCache.get).toHaveBeenCalledTimes(1)
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+    })
+
+    it('should handle different pods with different IPs', async () => {
+      const path1 = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+      const path2 = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri2()}`
+
+      const response1 = await appPost(path1, testData.jolokia.listMBeans.request)
+      expect(response1.status).toBe(200)
+      expect(podIpCache.get).toHaveBeenCalledTimes(0)
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+
+      const response2 = await appPost(path2, testData.jolokia.listMBeans.request)
+      expect(response2.status).toBe(200)
+      expect(podIpCache.get).toHaveBeenCalledTimes(0)
+      expect(podIpCache.set).toHaveBeenCalledTimes(2)
+    })
+
+    it('should cache pod IP consistently for same pod', async () => {
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      // Make multiple requests to same pod
+      const iterations = 3
+      const promises = []
+      for (let i = 0; i < iterations; i++) {
+        promises.push(appPost(path, testData.jolokia.listMBeans.request))
+      }
+
+      const responses = await Promise.all(promises)
+
+      // All responses should be successful
+      responses.forEach(res => {
+        expect(res.status).toBe(200)
+      })
+
+      // Because requests ran concurrently, stampede protection caught them!
+      // The first request missed and set the promise.
+      // The other 2 requests hit '.get' while it was pending.
+      expect(podIpCache.get).toHaveBeenCalledTimes(iterations - 1)
+      expect(podIpCache.set).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('rbacCache', () => {
+    const origRbacCacheGet = rbacCache.get
+    const origRbacCacheSet = rbacCache.set
+
+    beforeEach(() => {
+      // Spy on cache operations
+      rbacCache.get = jest.fn(origRbacCacheGet)
+      rbacCache.set = jest.fn(origRbacCacheSet)
+    })
+
+    afterEach(() => {
+      // Restore original methods
+      rbacCache.get = origRbacCacheGet
+      rbacCache.set = origRbacCacheSet
+    })
+
+    it('should cache RBAC authorization result on first request', async () => {
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      // First request - cache miss
+      const response1 = await appPost(path, testData.jolokia.search.request)
+      expect(response1.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(0)
+      expect(rbacCache.set).toHaveBeenCalledTimes(1)
+
+      // Second request - cache hit
+      const response2 = await appPost(path, testData.jolokia.search.request)
+      expect(response2.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(1)
+      expect(rbacCache.set).toHaveBeenCalledTimes(1)
+    })
+
+    it('should cache RBAC for same namespace/pod/verb combination', async () => {
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      // Make multiple requests with same parameters
+      const responses = []
+      const iterations = 5
+      for (let i = 0; i < iterations; i++) {
+        const response = await appPost(path, testData.jolokia.search.request)
+        responses.push(response)
+      }
+
+      // All responses should be successful
+      responses.forEach(res => {
+        expect(res.status).toBe(200)
+        expect(rbacCache.get).toHaveBeenCalledTimes(iterations - 1)
+        expect(rbacCache.set).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('should handle RBAC cache with viewer role', async () => {
+      testData.authorization.adminAllowed = false
+      testData.authorization.viewerAllowed = true
+
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      const response1 = await appPost(path, testData.jolokia.bulkRequestWithViewerRole.request)
+      expect(response1.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(0)
+      // Called twice - once testing for admin then the second testing for viewer
+      expect(rbacCache.set).toHaveBeenCalledTimes(2)
+
+      const response2 = await appPost(path, testData.jolokia.bulkRequestWithViewerRole.request)
+      expect(response2.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(2)
+      expect(rbacCache.set).toHaveBeenCalledTimes(2)
+    })
+
+    it('should handle RBAC cache with admin role', async () => {
+      testData.authorization.adminAllowed = true
+      testData.authorization.viewerAllowed = true
+
+      const path = `/management/namespaces/${testData.metadata.namespace}/pods/${jolokiaUri()}`
+
+      const response1 = await appPost(path, testData.jolokia.bulkRequestWithInterception.request)
+      expect(response1.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(0)
+      expect(rbacCache.set).toHaveBeenCalledTimes(1)
+
+      const response2 = await appPost(path, testData.jolokia.bulkRequestWithInterception.request)
+      expect(response2.status).toBe(200)
+      expect(rbacCache.get).toHaveBeenCalledTimes(1)
+      expect(rbacCache.set).toHaveBeenCalledTimes(1)
+    })
   })
 })
