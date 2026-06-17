@@ -22,7 +22,7 @@
     "@openshift-console/dynamic-plugin-sdk": "4.21.0",
     "@openshift-console/dynamic-plugin-sdk-webpack": "4.21.0",
     "@patternfly/patternfly": "^6.4.0",
-    "@patternfly/react-charts": "^8.4.0",
+    "@patternfly/react-charts": "^8.5.1",
     "@patternfly/react-code-editor": "^6.4.0",
     "@patternfly/react-core": "^6.4.0",
     "@patternfly/react-icons": "^6.4.0",
