@@ -394,10 +394,10 @@ export const testData = {
   },
 }
 
-export function jolokiaUri() {
-  return `https:${testData.pod.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
+export function jolokiaUri(protocol: string) {
+  return `${protocol}:${testData.pod.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
 }
 
-export function jolokiaUri2() {
-  return `https:${testData.pod2.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
+export function jolokiaUri2(protocol: string) {
+  return `${protocol}:${testData.pod2.resource.status.podIP}:${testData.metadata.jolokia.port}${testData.metadata.jolokia.path}/?${testData.metadata.jolokia.params}`
 }

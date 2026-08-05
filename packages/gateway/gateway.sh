@@ -10,6 +10,8 @@ HAWTIO_ONLINE_GATEWAY_ENV_FILE="/opt/hawtio-online-gateway/env.product"
 if [ -f "${HAWTIO_ONLINE_GATEWAY_ENV_FILE}" ]; then
   cp ${HAWTIO_ONLINE_GATEWAY_ENV_FILE} /tmp
   sed -i -e "s/^LOG_LEVEL.*/LOG_LEVEL=${HAWTIO_ONLINE_GATEWAY_LOG_LEVEL}/" /tmp/env.product
+  sed -i -e "s~^HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE.*~HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE=/etc/tls/private/proxying/tls.crt~" /tmp/env.product
+  sed -i -e "s~^HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY.*~HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY=/etc/tls/private/proxying/tls.key~" /tmp/env.product
   cat /tmp/env.product > ${HAWTIO_ONLINE_GATEWAY_ENV_FILE}
 fi
 

@@ -6,35 +6,8 @@ import cors from 'cors'
 import * as fs from 'fs'
 import * as https from 'https'
 import { logger, expressLogger } from './logger'
-import { getClusterAddr, proxyJolokiaAgent, setClusterAddr, SSLOptions } from './jolokia-agent'
-
-const environment = process.env.NODE_ENV || 'development'
-
-/*
- * - Specified by default in env file
- * - Can be overriden by env var in deployment resource
- */
-const port = process.env.HAWTIO_ONLINE_GATEWAY_APP_PORT || 3000
-
-/*
- * In development when gateway is a local server rather than inside
- * the cluster address needs to be overwritten since the default will
- * not be available outside of the cluster.
- */
-const clusterAddress = process.env.CLUSTER_ADDRESS || ''
-if (clusterAddress.length > 0) {
-  setClusterAddr(clusterAddress)
-}
-
-/*
- * All specified in deployment resource
- *
- */
-const sslKey = process.env.HAWTIO_ONLINE_GATEWAY_SSL_KEY || ''
-const sslCertificate = process.env.HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE || ''
-const sslCertificateCA = process.env.HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE_CA || ''
-const sslProxyKey = process.env.HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY || ''
-const sslProxyCertificate = process.env.HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE || ''
+import { gatewayConfig } from './gateway-config'
+import { proxyJolokiaAgent } from './jolokia-agent'
 
 function checkEnvVar(envVar: string, item: string) {
   if (!envVar || envVar.length === 0) {
@@ -48,30 +21,88 @@ function checkEnvVar(envVar: string, item: string) {
   }
 }
 
+const environment = process.env.NODE_ENV || 'development'
+
+/*
+ * - Specified by default in env file
+ * - Can be overriden by env var in deployment resource
+ */
+const port = process.env.HAWTIO_ONLINE_GATEWAY_APP_PORT || 3000
+
+/*
+ * Is masking of IP Addresses required
+ */
+const maskIpAddr = process.env.HAWTIO_ONLINE_MASK_IP_ADDRESSES ?? 'false'
+gatewayConfig.setMaskIpAddrEnabled(maskIpAddr.toLowerCase() === 'true')
+
+/*
+ * Determine whether to apply RBAC using either a custom
+ * or default file
+ */
+const rbacAcl = process.env.HAWTIO_ONLINE_RBAC_ACL ?? ''
+if (rbacAcl.length > 0) {
+  gatewayConfig.setRbacAcl(process.env.HAWTIO_ONLINE_RBAC_ACL)
+}
+
+/*
+ * Determine whether the RBAC registry is enabled
+ */
+gatewayConfig.setRbacRegistryEnabled(process.env.HAWTIO_ONLINE_DISABLE_RBAC_REGISTRY !== 'true')
+
+/*
+ * In development when gateway is a local server rather than inside
+ * the cluster address, it is important to access the jolokia pods
+ * via the cluster API proxy and not their ip addresses so we need to
+ * know whether external or not.
+ */
+const isExternal = process.env.HAWTIO_ONLINE_GATEWAY_IS_EXTERNAL || 'false'
+gatewayConfig.setExternal(isExternal.toLowerCase() === 'true')
+
+/*
+ * In development when gateway is a local server rather than inside
+ * the cluster address needs to be overwritten since the default will
+ * not be available outside of the cluster.
+ */
+const clusterAddress = process.env.HAWTIO_ONLINE_GATEWAY_CLUSTER_MASTER || ''
+if (clusterAddress.length > 0) {
+  gatewayConfig.setClusterAddr(clusterAddress)
+}
+
+/*
+ * All specified in deployment resource
+ */
+const sslKey = process.env.HAWTIO_ONLINE_GATEWAY_SSL_KEY || ''
+const sslCertificate = process.env.HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE || ''
+const sslCertificateCA = process.env.HAWTIO_ONLINE_GATEWAY_SSL_CERTIFICATE_CA || ''
+const sslProxyKey = process.env.HAWTIO_ONLINE_GATEWAY_SSL_PROXY_KEY || ''
+const sslProxyCertificate = process.env.HAWTIO_ONLINE_GATEWAY_SSL_PROXY_CERTIFICATE || ''
+
 checkEnvVar(sslKey, 'SSL Certifcate Key')
 checkEnvVar(sslCertificate, 'SSL Certifcate')
 checkEnvVar(sslCertificateCA, 'SSL Certifcate Authority')
 checkEnvVar(sslProxyKey, 'SSL Proxy Certifcate Key')
 checkEnvVar(sslProxyCertificate, 'SSL Proxy Certifcate')
 
-const sslOptions: SSLOptions = {
+gatewayConfig.setProxySSLOptions({
   certCA: fs.readFileSync(sslCertificateCA),
   proxyKey: fs.readFileSync(sslProxyKey),
   proxyCert: fs.readFileSync(sslProxyCertificate),
-}
+})
 
 export const gatewayServer = express()
 
-logger.info('**************************************')
-logger.info(`* Environment:       ${environment}`)
-logger.info(`* App Port:          ${port}`)
-logger.info(`* Log Level:         ${logger.level}`)
-logger.info(`* SSL Enabled:       ${sslCertificate !== ''}`)
-logger.info(`* Proxy SSL Enabled: ${sslProxyCertificate !== ''}`)
-logger.info(`* Cluster Address:   ${getClusterAddr()}`)
-logger.info(`* RBAC:              ${process.env['HAWTIO_ONLINE_RBAC_ACL'] ?? 'default'}`)
-logger.info(`* Mask IP Addresses: ${process.env['HAWTIO_ONLINE_MASK_IP_ADDRESSES'] ?? 'false'}`)
-logger.info('**************************************')
+logger.info('********************************************************')
+logger.info(`* Environment:          ${environment}`)
+logger.info(`* App Port:             ${port}`)
+logger.info(`* Is External:          ${gatewayConfig.isExternal()}`)
+logger.info(`* Log Level:            ${logger.level}`)
+logger.info(`* SSL Enabled:          ${sslCertificate !== ''}`)
+logger.info(`* Proxy SSL Enabled:    ${gatewayConfig.getProxySSLOptions() !== undefined}`)
+logger.info(`* Cluster Address:      ${gatewayConfig.getClusterAddr()}`)
+logger.info(`* RBAC:                 ${gatewayConfig.getRbacAcl() ?? 'default'}`)
+logger.info(`* RBAC Registry:        ${gatewayConfig.isRbacRegistryEnabled()}`)
+logger.info(`* Mask IP Addresses:    ${gatewayConfig.isMaskIpAddrEnabled()}`)
+logger.info('*********************************************************')
 
 // Log middleware requests
 gatewayServer.use(expressLogger)
@@ -122,10 +153,10 @@ gatewayServer.route('/status').get((req, res) => {
 gatewayServer
   .route('/management/*')
   .get((req, res) => {
-    proxyJolokiaAgent(req, res, sslOptions)
+    proxyJolokiaAgent(req, res)
   })
   .post(express.json({ type: '*/json', limit: '50mb', strict: false }), (req, res) => {
-    proxyJolokiaAgent(req, res, sslOptions)
+    proxyJolokiaAgent(req, res)
   })
 
 /**
@@ -152,11 +183,12 @@ gatewayServer.use(express.urlencoded({ extended: false }))
 /*
  * Exports the running server for use in unit testing
  */
+export const runningGatewayServerPort = port
 const gatewayHttpsServer = https.createServer(
   {
     key: fs.readFileSync(sslKey),
     cert: fs.readFileSync(sslCertificate),
-    ca: sslOptions.certCA,
+    ca: fs.readFileSync(sslCertificateCA),
     requestCert: true,
     rejectUnauthorized: false,
   },

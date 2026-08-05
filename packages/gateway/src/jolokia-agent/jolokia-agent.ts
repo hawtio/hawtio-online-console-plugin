@@ -1,18 +1,16 @@
 import yaml from 'yaml'
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
 import fetch, { Response as FetchResponse } from 'node-fetch'
-import { jwtDecode } from 'jwt-decode'
 import { LRUCache } from 'lru-cache'
 import * as fs from 'fs'
 import https from 'https'
 import { JolokiaRequest as MBeanRequest } from 'jolokia.js'
 import { logger } from '../logger'
+import { gatewayConfig } from '../gateway-config'
 import { isObject, isError, maskIPAddresses, joinPaths, printObject } from '../utils'
 import {
   AgentInfo,
   InterceptedResponse,
-  getClusterAddr,
-  SSLOptions,
   SimpleResponse,
   extractHeaders,
   toFetchHeaders,
@@ -22,7 +20,6 @@ import {
   fromFetchHeaders,
 } from './globals'
 import * as RBAC from './rbac'
-import { createHash } from 'crypto'
 
 const DEFAULT_ACL_FILE_PATH = `${__dirname}/ACL.yaml`
 
@@ -41,10 +38,8 @@ const rbacCache = new LRUCache<string, Promise<SimpleResponse>>({
 function clearCaches() {
   podIpCache.clear()
   rbacCache.clear()
-}
 
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
+  isRbacEnabled = undefined
 }
 
 // Export caches for testing
@@ -104,30 +99,20 @@ export function processRBACEnvVar(defaultRbacFilePath: string, rbacEnvVar?: stri
   if (!rbacEnvVar) {
     logger.info(`=== Enabling RBAC with default rules file`)
     initRBACFile(defaultRbacFilePath)
-    isRbacEnabled = true
+    return true
   } else if (rbacEnvVar.toLowerCase() === 'disabled') {
     logger.info(`=== RBAC has been disabled`)
-    isRbacEnabled = false
+    return false
   } else {
     // Custom ACL file has been specified
     logger.info(`=== Custom RBAC rules file defined: ${rbacEnvVar}`)
     initRBACFile(rbacEnvVar)
-    isRbacEnabled = true
+    return true
   }
-
-  return isRbacEnabled
 }
 
-/*
- * Determine whether to apply RBAC using either a custom
- * or default file
- */
-const rbacACLEnvVar = process.env['HAWTIO_ONLINE_RBAC_ACL']
-let isRbacEnabled: boolean
-processRBACEnvVar(DEFAULT_ACL_FILE_PATH, rbacACLEnvVar)
-
-const useForm = process.env['HAWTIO_ONLINE_AUTH'] === 'form'
-logger.info(`=== Use Form Authentication: ${useForm}`)
+// Stateful var initialised once to determine enablement of RBAC
+let isRbacEnabled: boolean | undefined
 
 // Headers that should not be passed onto fetch sub requests
 const excludeHeaders = [
@@ -155,8 +140,11 @@ function response(agentInfo: AgentInfo, res: SimpleResponse) {
    */
   agentInfo.response.setHeader('content-type', 'application/json')
 
-  logger.trace(`Masking IP address for response body ${res.body}`)
-  const maskedResponse = maskIPAddresses(res.body)
+  let maskedResponse = res.body
+  if (gatewayConfig.isMaskIpAddrEnabled()) {
+    logger.trace(`Masking IP address for response body ${res.body}`)
+    maskedResponse = maskIPAddresses(res.body)
+  }
 
   agentInfo.response.status(res.status).send(maskedResponse)
 }
@@ -203,19 +191,6 @@ async function rejectResponse(response: FetchResponse): Promise<SimpleResponseEr
   return new SimpleResponseError(new SimpleResponse(response.status, JSON.stringify({ error: body }), new Headers()))
 }
 
-function getSubjectFromJwt(agentInfo: AgentInfo): string | undefined {
-  logger.trace('(jolokia-agent) getSubjectFromJwt ...')
-
-  const authz = agentInfo.request.header('Authorization')
-  if (!authz) {
-    logger.error('Authorization header not found in request')
-    return ''
-  }
-  const token = authz.split(' ')[1]
-  const payload = jwtDecode(token)
-  return payload.sub
-}
-
 async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo): Promise<SimpleResponse> {
   logger.trace('(jolokia-agent) selfLocalSubjectAccessReview ....')
 
@@ -231,6 +206,8 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
     return response
   }
 
+  logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview verb: ${verb}`)
+
   //
   // Protects against cache stampede problem
   //
@@ -245,43 +222,22 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
   // 30 requests simultaneously.
   //
   const sarPromise = (async () => {
-    let api
-    let body
-    // When form is used, don't rely on OpenShift-specific LocalSubjectAccessReview
-    if (useForm) {
-      api = 'authorization.k8s.io'
-      body = {
-        kind: 'LocalSubjectAccessReview',
-        apiVersion: 'authorization.k8s.io/v1',
-        metadata: {
-          namespace: agentInfo.namespace,
-        },
-        spec: {
-          user: getSubjectFromJwt(agentInfo) || '',
-          resourceAttributes: {
-            verb: verb,
-            resource: 'pods',
-            name: agentInfo.pod,
-            namespace: agentInfo.namespace,
-          },
-        },
-      }
-    } else {
-      api = 'authorization.openshift.io'
-      body = {
-        kind: 'LocalSubjectAccessReview',
-        apiVersion: 'authorization.openshift.io/v1',
-        namespace: agentInfo.namespace,
-        verb: verb,
-        resource: 'pods',
-        name: agentInfo.pod,
-      }
+    const api = 'authorization.openshift.io'
+    const body = {
+      kind: 'LocalSubjectAccessReview',
+      apiVersion: 'authorization.openshift.io/v1',
+      namespace: agentInfo.namespace,
+      verb: verb,
+      resource: 'pods',
+      name: agentInfo.pod,
     }
+
     const json = JSON.stringify(body)
+    logger.trace(`(jolokia-agent) Verifying authorization using body ${json}`)
 
     // /apis/authorization.k8s.io/v1/namespaces/{namespace}/localsubjectaccessreviews
     const authUri = joinPaths(
-      getClusterAddr(),
+      gatewayConfig.getClusterAddr(),
       'apis',
       api,
       'v1',
@@ -292,17 +248,21 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
 
     logger.trace(`(jolokia-agent) Verifying authorization at uri ${authUri}`)
 
-    const fetchResponse = await fetch(authUri, {
+    const requestInit: fetch.RequestInit = {
       method: 'POST',
       body: json,
       headers: toFetchHeaders(agentInfo.requestHeaders),
-      agent: new https.Agent({
-        cert: agentInfo.sslOptions.certCA,
+    }
+
+    if (gatewayConfig.getProxySSLOptions()) {
+      requestInit.agent = new https.Agent({
+        cert: gatewayConfig.getProxySSLOptions()?.certCA,
         rejectUnauthorized: false,
         keepAlive: false,
-      }),
-    })
+      })
+    }
 
+    const fetchResponse = await fetch(authUri, requestInit)
     if (!fetchResponse.ok) {
       logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview failed (${fetchResponse.status})`)
       throw await rejectResponse(fetchResponse)
@@ -314,7 +274,7 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
     logger.trace(`(jolokia-agent) selfLocalSubjectAccessReview sar: (${printObject(sar)})`)
 
     // Cache the response
-    const allowed = useForm ? sar.status.allowed : sar.allowed
+    const allowed = sar.allowed
     return new SimpleResponse(fetchResponse.status, allowed.toString(), fromFetchHeaders(fetchResponse.headers))
   })()
 
@@ -326,13 +286,20 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
   return sarPromise
 }
 
-async function getPodIP(agentInfo: AgentInfo): Promise<string> {
+async function retrievePodIP(agentInfo: AgentInfo) {
+  if (gatewayConfig.isExternal()) {
+    // Gateway is external so needs to use pod name with proxy endpoint
+    return
+  }
+
   const cacheKey = `${agentInfo.namespace}/${agentInfo.pod}`
   logger.trace(`(jolokia-agent) getPodIP cache key: ${cacheKey}`)
 
   if (podIpCache.has(cacheKey)) {
     logger.trace(`(jolokia-agent) getPodIP hit for PodIP: ${cacheKey}`)
-    return podIpCache.get(cacheKey)!
+    const resolvedIp = await podIpCache.get(cacheKey)!
+    agentInfo.ip = resolvedIp
+    return
   }
 
   logger.trace('(jolokia-agent) getPodIP ....')
@@ -352,25 +319,39 @@ async function getPodIP(agentInfo: AgentInfo): Promise<string> {
   //
   const ipPromise = (async () => {
     // /api/v1/namespaces/$1/pods/$2
-    const podIPUri = joinPaths(getClusterAddr(), 'api', 'v1', 'namespaces', agentInfo.namespace, 'pods', agentInfo.pod)
+    const podIPUri = joinPaths(
+      gatewayConfig.getClusterAddr(),
+      'api',
+      'v1',
+      'namespaces',
+      agentInfo.namespace,
+      'pods',
+      agentInfo.pod,
+    )
 
     logger.trace(`(jolokia-agent) Getting pod ip from uri ${podIPUri}`)
 
-    const fetchResponse = await fetch(podIPUri, {
+    const requestInit: fetch.RequestInit = {
       method: 'GET',
       headers: toFetchHeaders(agentInfo.requestHeaders),
-      agent: new https.Agent({
-        cert: agentInfo.sslOptions.certCA,
+    }
+
+    if (gatewayConfig.getProxySSLOptions()) {
+      requestInit.agent = new https.Agent({
+        cert: gatewayConfig.getProxySSLOptions()?.certCA,
         rejectUnauthorized: false,
         keepAlive: false,
-      }),
-    })
+      })
+    }
+
+    const fetchResponse = await fetch(podIPUri, requestInit)
     if (!fetchResponse.ok) {
       throw await rejectResponse(fetchResponse)
     }
 
     const json = await fetchResponse.json()
     const data = isObject(json) ? json : JSON.parse(json as string)
+    agentInfo.ip = data.status.podIP
     return data.status.podIP
   })()
 
@@ -378,21 +359,18 @@ async function getPodIP(agentInfo: AgentInfo): Promise<string> {
   // so subsequent retries aren't permanently locked into a broken state
   ipPromise.catch(() => podIpCache.delete(cacheKey))
 
+  logger.trace(`(jolokia-agent) Caching Pod IP: ${cacheKey}`)
   podIpCache.set(cacheKey, ipPromise)
-  return ipPromise
 }
 
 async function callJolokiaAgent(
-  podIP: string,
   agentInfo: AgentInfo,
   nonInterceptedMBeans?: Record<string, unknown> | Record<string, unknown>[],
 ): Promise<SimpleResponse> {
   logger.trace('(jolokia-agent) callJolokiaAgent ...')
 
-  const encodedPath = encodeURI(agentInfo.path)
   const method = agentInfo.request.method
-
-  const agentUri = joinPaths(`${agentInfo.protocol}://${podIP}:${agentInfo.port}`, encodedPath)
+  const agentUri = agentInfo.getJolokiaUri()
 
   logger.trace(`(jolokia-agent) doing a ${method} on ${agentUri}`)
 
@@ -412,10 +390,11 @@ async function callJolokiaAgent(
     options.body = JSON.stringify(nonInterceptedMBeans)
     logger.trace(`(jolokia-agent) ... with body ${options.body}`)
   }
-  if (agentInfo.protocol === 'https') {
+  if (agentInfo.protocol === 'https' && gatewayConfig.getProxySSLOptions()) {
+    logger.trace(`(jolokia-agent) ... using https with SSL`)
     options.agent = new https.Agent({
-      key: agentInfo.sslOptions.proxyKey,
-      cert: agentInfo.sslOptions.proxyCert,
+      key: gatewayConfig.getProxySSLOptions()?.proxyKey,
+      cert: gatewayConfig.getProxySSLOptions()?.proxyCert,
       rejectUnauthorized: false,
       keepAlive: false,
     })
@@ -520,12 +499,10 @@ function parseRequest(agentInfo: AgentInfo): MBeanRequest | MBeanRequest[] {
 }
 
 // This is usually called once upon the front-end loads, still we may want to cache it
-async function listMBeans(podIP: string, agentInfo: AgentInfo): Promise<Record<string, unknown>> {
+async function listMBeans(agentInfo: AgentInfo): Promise<Record<string, unknown>> {
   logger.trace('(jolokia-agent) listMBeans ...')
 
-  const encodedPath = encodeURI(agentInfo.path)
-  const uri = joinPaths(`${agentInfo.protocol}://`, `${podIP}:${agentInfo.port}`, encodedPath)
-
+  const uri = agentInfo.getJolokiaUri()
   logger.trace(`(jolokia-agent) listMBeans with uri ${uri}`)
   const options: fetch.RequestInit = {
     method: 'POST',
@@ -535,8 +512,8 @@ async function listMBeans(podIP: string, agentInfo: AgentInfo): Promise<Record<s
 
   if (agentInfo.protocol === 'https') {
     options.agent = new https.Agent({
-      key: agentInfo.sslOptions.proxyKey,
-      cert: agentInfo.sslOptions.proxyCert,
+      key: gatewayConfig.getProxySSLOptions()?.proxyKey,
+      cert: gatewayConfig.getProxySSLOptions()?.proxyCert,
       rejectUnauthorized: false,
       keepAlive: false,
     })
@@ -558,15 +535,16 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
   logger.trace('(jolokia-agent) handleRequestWithRole ...')
 
   const mbeanRequest = parseRequest(agentInfo)
+  if (!gatewayConfig.isExternal()) {
+    await retrievePodIP(agentInfo)
+  }
 
   let mbeanListRequired: boolean
   if (Array.isArray(mbeanRequest)) {
     mbeanListRequired = mbeanRequest.some(r => RBAC.isMBeanListRequired(r))
 
-    const podIP = await getPodIP(agentInfo)
-
     let mbeans = {}
-    if (mbeanListRequired) mbeans = await listMBeans(podIP, agentInfo)
+    if (mbeanListRequired) mbeans = await listMBeans(agentInfo)
 
     // Check each requested mbean that it is allowed by RBAC given the role
     const rbac = mbeanRequest.map(r => RBAC.check(r, role))
@@ -578,7 +556,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
     const nonInterceptedMBeans = intercept.filter(i => !i.intercepted).map(i => i.request)
 
     // Submit the non-intercepted mbeans to the jolokia service
-    const jolokiaResponse = await callJolokiaAgent(podIP, agentInfo, nonInterceptedMBeans)
+    const jolokiaResponse = await callJolokiaAgent(agentInfo, nonInterceptedMBeans)
     const jolokiaResult = JSON.parse(jolokiaResponse.body)
 
     // Unroll intercepted requests
@@ -617,11 +595,9 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
   } else {
     mbeanListRequired = RBAC.isMBeanListRequired(mbeanRequest)
 
-    const podIP = await getPodIP(agentInfo)
-
     let mbeans = {}
     if (mbeanListRequired) {
-      mbeans = await listMBeans(podIP, agentInfo)
+      mbeans = await listMBeans(agentInfo)
     }
 
     const rbac = RBAC.check(mbeanRequest, role)
@@ -634,7 +610,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
       return new SimpleResponse(intercepted.response?.status || 502, JSON.stringify(intercepted.response))
     }
 
-    return callJolokiaAgent(podIP, agentInfo, agentInfo.request.body)
+    return callJolokiaAgent(agentInfo, agentInfo.request.body)
   }
 }
 
@@ -682,46 +658,53 @@ async function proxyJolokiaAgentWithoutRbac(agentInfo: AgentInfo): Promise<Simpl
     throw reject(403, { message: `Subject Access Review Result: { allowed: ${sarResponse.body} }` })
   }
 
-  const podIP = await getPodIP(agentInfo)
-  const jolokiaResult = await callJolokiaAgent(podIP, agentInfo, agentInfo.request.body)
+  if (!gatewayConfig.isExternal()) {
+    await retrievePodIP(agentInfo)
+  }
+  const jolokiaResult = await callJolokiaAgent(agentInfo, agentInfo.request.body)
   return jolokiaResult
 }
 
-export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse, sslOptions: SSLOptions) {
+export function proxyJolokiaAgent(req: ExpressRequest, res: ExpressResponse) {
   logger.trace('(jolokia-agent) proxyJolokiaAgent ...')
+
+  // Only read the file and initialize if it has never been done before
+  if (isRbacEnabled === undefined) {
+    logger.info('=== Initializing Agent RBAC rules upon first request ===')
+    isRbacEnabled = processRBACEnvVar(DEFAULT_ACL_FILE_PATH, gatewayConfig.getRbacAcl())
+  }
+
   logger.trace(`(jolokia-agent) acting on ${req.originalUrl}`)
 
   const parts = req.url.match(/\/management\/namespaces\/(.+)\/pods\/(http|https):(.+):(\d+)\/(.*)/)
   if (!parts) {
     const error = reject(404, { reason: 'URL not recognized' })
     response(
-      {
+      new AgentInfo({
         request: req,
         requestHeaders: extractHeaders(req, excludeHeaders),
         response: res,
-        sslOptions: sslOptions,
         namespace: '',
         protocol: '',
         pod: '',
         port: '',
         path: '',
-      },
+      }),
       error.response,
     )
     return
   }
 
-  const agentInfo = {
+  const agentInfo = new AgentInfo({
     request: req,
     requestHeaders: extractHeaders(req, excludeHeaders),
     response: res,
-    sslOptions: sslOptions,
     namespace: parts[1],
     protocol: parts[2],
     pod: parts[3],
     port: parts[4],
     path: parts[5],
-  }
+  })
 
   return (isRbacEnabled ? proxyJolokiaAgentWithRbac(agentInfo) : proxyJolokiaAgentWithoutRbac(agentInfo))
     .then(res => response(agentInfo, res))

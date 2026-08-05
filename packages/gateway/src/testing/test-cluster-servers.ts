@@ -1,4 +1,5 @@
 import express from 'express'
+import { Response as ExpressResponse } from 'express-serve-static-core'
 import * as fs from 'fs'
 import * as https from 'https'
 import path from 'path'
@@ -11,18 +12,22 @@ import { testData } from './gateway-test-inputs'
  ******************************************/
 
 export const CLUSTER_HOST = 'localhost'
-export const CLUSTER_PORT = 10443
-export const CLUSTER_BASE_ADDRESS = `https://${CLUSTER_HOST}:${CLUSTER_PORT}`
+export const CLUSTER_HTTPS_PORT = 10443
+export const CLUSTER_HTTPS_BASE_ADDRESS = `https://${CLUSTER_HOST}:${CLUSTER_HTTPS_PORT}`
 
 const clusterServer = express()
 clusterServer.use(expressLogger)
 clusterServer.use(express.json())
 
+function masterTestResponse(res: ExpressResponse) {
+  res.status(200).json(JSON.stringify({ message: 'response from master' }))
+}
+
 /*
  * Route for getting the pod IP
  * Returns the Cluster hostname so the jolokia route can be tested
  */
-clusterServer.route('/api/*').get((req, res) => {
+clusterServer.route('/api/v1/namespaces/*/pods/*').get((req, res) => {
   res.status(201).json(JSON.stringify(testData.pod.resource))
 })
 
@@ -35,14 +40,23 @@ clusterServer.route('/apis/authorization*').post((req, res) => {
     return
   }
 
-  if (!req.body || !req.body.verb) {
-    const msg = `ERROR: No authorization body or no verb provided in authorization body`
+  if (!req.body) {
+    const msg = `ERROR: No authorization body provided`
     logger.error(msg)
     res.status(502).send({ error: msg })
     return
   }
 
-  switch (req.body.verb) {
+  // verb is in different places for openshift and kubernetes kinds
+  const verb = req.body.verb || req.body.spec?.resourceAttributes?.verb
+  if (!verb) {
+    const msg = `ERROR: No authorization verb provided in authorization body`
+    logger.error(msg)
+    res.status(502).send({ error: msg })
+    return
+  }
+
+  switch (verb) {
     case 'get':
       if (testData.authorization.viewerAllowed)
         res.status(200).json(JSON.stringify(testData.authorization.allowedResponse))
@@ -65,8 +79,9 @@ clusterServer.route('/apis/authorization*').post((req, res) => {
 /*
  * Direct the jolokia path back to this cluster
  * In reality, it would point to the real ip address of the pod
+ * Will handle both jolokia urls where proxy/podname or pod ip is used.
  */
-clusterServer.route(`${testData.metadata.jolokia.path}*`).all((req, res) => {
+clusterServer.route(`*${testData.metadata.jolokia.path}*`).all((req, res) => {
   const reqPayload = JSON.stringify(req.body)
 
   if (req.method === 'GET') {
@@ -102,6 +117,27 @@ clusterServer.route(`${testData.metadata.jolokia.path}*`).all((req, res) => {
 })
 
 /*
+ * Route for getting testing api endpoints in masterguard tests
+ */
+clusterServer.route('/api/*').get((req, res) => {
+  masterTestResponse(res)
+})
+
+/*
+ * Route for getting testing apis endpoints in masterguard tests
+ */
+clusterServer.route('/apis/*').get((req, res) => {
+  masterTestResponse(res)
+})
+
+/*
+ * Route for getting testing oauth endpoint in masterguard tests
+ */
+clusterServer.route('/.well-known/*').get((req, res) => {
+  masterTestResponse(res)
+})
+
+/*
  * Cluster will always be HTTPS
  * so add the keys and certificates
  */
@@ -119,6 +155,6 @@ const clusterHttpsServer = https.createServer(
 /*
  * Start the cluster server listening ready for the tests
  */
-export const runningClusterServer = clusterHttpsServer.listen(CLUSTER_PORT, () => {
-  logger.info(`INFO: Test cluster server listening on port ${CLUSTER_PORT}`)
+export const runningHttpsClusterServer = clusterHttpsServer.listen(CLUSTER_HTTPS_PORT, () => {
+  logger.info(`INFO: Test cluster server listening on port ${CLUSTER_HTTPS_PORT}`)
 })

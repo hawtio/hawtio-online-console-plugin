@@ -1,12 +1,8 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
 import { MBeanInfo, MBeanInfoError, MBeanAttribute, MBeanOperation, JolokiaRequest as MBeanRequest } from 'jolokia.js'
 import * as NodeFetch from 'node-fetch'
-
-export interface SSLOptions {
-  certCA: Buffer
-  proxyKey: Buffer
-  proxyCert: Buffer
-}
+import { gatewayConfig } from '../gateway-config'
+import { joinPaths } from '../utils'
 
 export interface BulkValue {
   CanInvoke: boolean
@@ -78,16 +74,56 @@ interface ArgumentRequest extends ExecMBeanRequest {
   arguments: unknown[]
 }
 
-export interface AgentInfo {
+export class AgentInfo {
   request: ExpressRequest
   requestHeaders: Headers
   response: ExpressResponse
-  sslOptions: SSLOptions
   namespace: string
   protocol: string
   pod: string
   port: string
   path: string
+  ip?: string
+
+  constructor(init: {
+    request: ExpressRequest
+    requestHeaders: Headers
+    response: ExpressResponse
+    namespace: string
+    protocol: string
+    pod: string
+    port: string
+    path: string
+  }) {
+    this.request = init.request
+    this.requestHeaders = init.requestHeaders
+    this.response = init.response
+    this.namespace = init.namespace
+    this.protocol = init.protocol
+    this.pod = init.pod
+    this.port = init.port
+    this.path = init.path
+  }
+
+  getJolokiaUri() {
+    const encodedPath = encodeURI(this.path)
+    if (!this.ip) {
+      // If no ip assigned then return named pod uri using proxy
+      return joinPaths(
+        gatewayConfig.getClusterAddr(),
+        'api',
+        'v1',
+        'namespaces',
+        this.namespace,
+        'pods',
+        `${this.protocol}:${this.pod}:${this.port}`,
+        'proxy',
+        encodedPath,
+      )
+    }
+
+    return joinPaths(`${this.protocol}://`, `${this.ip}:${this.port}`, encodedPath)
+  }
 }
 
 export class SimpleResponse {
@@ -104,20 +140,6 @@ export class SimpleResponse {
   get ok() {
     return this.status >= 200 && this.status <= 299
   }
-}
-
-const DEFAULT_KUBE_CLUSTER_ADDRESS = 'https://kubernetes.default'
-let kubeClusterAddr = DEFAULT_KUBE_CLUSTER_ADDRESS
-
-export function getClusterAddr() {
-  return kubeClusterAddr
-}
-
-/*
- * Probably only required for testing purposes
- */
-export function setClusterAddr(address: string) {
-  kubeClusterAddr = address
 }
 
 export function isSimpleResponse(obj: unknown): obj is SimpleResponse {
@@ -264,7 +286,7 @@ export function toFetchHeaders(srcHeaders: Headers): NodeFetch.Headers {
   srcHeaders.forEach((value, name) => headers.append(name, value))
 
   // Ensure the body can be parsed by Express
-  headers.append('Content-Type', 'application/json')
+  headers.set('Content-Type', 'application/json')
   return headers
 }
 

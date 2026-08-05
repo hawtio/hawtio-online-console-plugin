@@ -1,2 +1,2 @@
 export * from './gateway-test-inputs'
-export * from './test-cluster-server'
+export * from './test-cluster-servers'

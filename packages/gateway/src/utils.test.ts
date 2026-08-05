@@ -24,22 +24,10 @@ describe('utils', () => {
     process.env = { ...OLD_ENV } // Make a copy
   })
 
-  afterAll(() => {
-    process.env = OLD_ENV // Restore old environment
-  })
-
-  it('maskIPAddresses-true', () => {
-    process.env.HAWTIO_ONLINE_MASK_IP_ADDRESSES = 'true'
+  it('maskIPAddresses', () => {
     const response = maskIPAddresses(input)
     expect(response).not.toContain(ip1)
     expect(response).not.toContain(ip2)
     expect(response).toContain(IP_ADDRESS_MASK)
-  })
-
-  it('maskIPAddresses-false', () => {
-    process.env.HAWTIO_ONLINE_MASK_IP_ADDRESSES = 'false'
-    const response = maskIPAddresses(input)
-    expect(response).toContain(ip1)
-    expect(response).toContain(ip2)
   })
 })
