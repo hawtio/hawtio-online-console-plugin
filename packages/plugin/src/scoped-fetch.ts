@@ -4,6 +4,18 @@
 import { getCSRFToken } from './utils/https'
 import { PLUGIN_BASE_PATH } from './constants'
 
+// Polyfill AbortSignal.timeout for browsers that don't support it
+// (Chrome <103, Firefox <100, Safari <16.4)
+if (typeof AbortSignal !== 'undefined' && !AbortSignal.timeout) {
+  AbortSignal.timeout = function (ms: number): AbortSignal {
+    const controller = new AbortController()
+    setTimeout(() => {
+      controller.abort(new DOMException('TimeoutError', 'TimeoutError'))
+    }, ms)
+    return controller.signal
+  }
+}
+
 type HawtioFetchPath = {
   path?: string
   regex: RegExp
@@ -13,13 +25,16 @@ type HawtioFetchPaths = Record<string, HawtioFetchPath>
 
 // Regex definitions
 const hawtioFetchPaths: HawtioFetchPaths = {
-  presetConnections: { path: 'preset-connections', regex: /\/\/preset-connections$/ },
-  hawtconfig: { path: 'hawtconfig.json', regex: /hawtconfig\.json$/ },
-  sessionTimeout: { path: 'auth/config/session-timeout$1', regex: /auth\/config\/session-timeout(.*)/ },
-  management: { regex: /(.*\/gateway\/management\/.*)/ }, // don't want to replace just track
+  presetConnections: { path: 'preset-connections', regex: /(?:\/)*preset-connections$/ },
+  hawtconfig: { path: 'hawtconfig.json', regex: /(?:\/)*hawtconfig\.json$/ },
+  sessionTimeout: { path: 'auth/config/session-timeout$1', regex: /(?:\/)*auth\/config\/session-timeout(.*)/ },
+  management: { regex: /(.*\/gateway\/management\/.*)/ },
 }
 
 export const basePath = PLUGIN_BASE_PATH
+
+// Default timeout for Hawtio requests (30 seconds)
+const DEFAULT_FETCH_TIMEOUT_MS = 30000
 
 async function waitForCsrfToken(retries = 10, delay = 200): Promise<string | undefined> {
   for (let i = 0; i < retries; i++) {
@@ -28,6 +43,31 @@ async function waitForCsrfToken(retries = 10, delay = 200): Promise<string | und
     await new Promise(r => setTimeout(r, delay))
   }
   return undefined
+}
+
+/**
+ * Creates an AbortSignal with a timeout, merging with any existing signal from init
+ */
+function createTimeoutSignal(init?: RequestInit, timeoutMs: number = DEFAULT_FETCH_TIMEOUT_MS): AbortSignal {
+  // If init already has a signal, we need to merge it with our timeout
+  if (init?.signal) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(new Error('Request timeout')), timeoutMs)
+
+    // If the original signal aborts, abort our controller too
+    init.signal.addEventListener('abort', () => {
+      clearTimeout(timeoutId)
+      controller.abort(init.signal!.reason)
+    })
+
+    // Clean up timeout if request completes
+    controller.signal.addEventListener('abort', () => clearTimeout(timeoutId))
+
+    return controller.signal
+  }
+
+  // No existing signal, just create a simple timeout signal
+  return AbortSignal.timeout(timeoutMs)
 }
 
 export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -95,9 +135,14 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
   }
 
   /*
+   * Add timeout support to all Hawtio requests
+   */
+  const timeoutSignal = createTimeoutSignal(init)
+  const fetchOptions = { ...init, headers, signal: timeoutSignal }
+
+  /*
    * Handle Request objects to preserve Body/Method
    */
-  const fetchOptions = { ...init, headers }
   if (input instanceof Request) {
     // Explicitly carry over the method
     if (!fetchOptions.method) {
@@ -123,7 +168,7 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
         referrerPolicy: input.referrerPolicy,
         integrity: input.integrity,
         keepalive: input.keepalive,
-        signal: input.signal,
+        signal: timeoutSignal,
       }),
     )
   }
@@ -132,5 +177,5 @@ export const scopedFetch = async (input: RequestInfo | URL, init?: RequestInit):
    * Call the real window.fetch with new URL string and Headers
    * Use 'hawtioUrl' here because path might been have rewritten
    */
-  return window.fetch(hawtioUrl, { ...init, headers })
+  return window.fetch(hawtioUrl, fetchOptions)
 }

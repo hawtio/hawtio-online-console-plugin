@@ -99,9 +99,9 @@ class ConnectionService {
 
   private jolokiaContainerPort(container: Container): number | null {
     const ports: Array<ContainerPort> = container.ports || []
-    log.debug(`jolokiaContainerPorts identified: ${ports}`)
+    log.debug('jolokiaContainerPorts identified:', ports)
     const containerPort = ports.find(port => port.name === 'jolokia')
-    log.debug(`jolokaiContainerPorts determined the container Port to be ${containerPort}`)
+    log.debug('jolokaiContainerPorts determined the container Port to be', containerPort)
     return containerPort?.containerPort ?? null
   }
 
@@ -121,7 +121,7 @@ class ConnectionService {
 
   private jolokiaPort(pod: K8sPod): number {
     const ports = jsonpath.query(pod, JOLOKIA_PORT_QUERY)
-    log.debug(`jolokiaPort found ${ports} in pod`)
+    log.debug(`jolokiaPort found in pod`, ports)
     if (!ports || ports.length === 0) {
       log.warn(
         `jolokiaPort could not query a port so using the default ${DEFAULT_JOLOKIA_PORT}. This might mean the pod cannot be accessed.`,
@@ -306,20 +306,51 @@ class ConnectionService {
    *
    * Connection will probably return a 200 but respond with the homepage
    * rather than any json so let checks that too
+   *
+   * Implements retry logic with exponential backoff for transient failures
    */
-  async probeJolokiaUrl(pod: K8sPod): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      const port = this.jolokiaPort(pod)
-      const path = `${this.jolokiaPath(pod, port)}version`
-      fetch(path)
-        .then(async (response: Response) => {
-          return this.handleResponse(response, path, resolve, reject)
+  async probeJolokiaUrl(pod: K8sPod, maxRetries = 3, initialDelay = 1000): Promise<string> {
+    const port = this.jolokiaPort(pod)
+    const path = `${this.jolokiaPath(pod, port)}version`
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(path, {
+          credentials: 'include', // Ensure cookies/CSRF tokens are sent
         })
-        .catch(error => {
-          const err = new HTTPError(error.status, error.error)
-          reject(err)
+
+        // Use promise wrapper for handleResponse
+        return await new Promise<string>((resolve, reject) => {
+          this.handleResponse(response, path, resolve, reject)
         })
-    })
+      } catch (error) {
+        lastError = error as Error
+
+        // Check if it's an HTTPError with a status code
+        if (error instanceof HTTPError) {
+          // Don't retry on 4xx errors except 401/403 (might be CSRF token issues)
+          if (error.statusCode >= 400 && error.statusCode < 500) {
+            if (error.statusCode !== 401 && error.statusCode !== 403) {
+              log.debug(`Non-retryable error ${error.statusCode} for ${path}`)
+              throw error
+            }
+          }
+        }
+
+        // If this isn't the last attempt, wait before retrying
+        if (attempt < maxRetries - 1) {
+          const delay = initialDelay * Math.pow(2, attempt)
+          log.debug(`Retry attempt ${attempt + 1}/${maxRetries} for ${path} after ${delay}ms`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+
+    // All retries exhausted
+    const msg = `Failed to probe Jolokia URL after ${maxRetries} attempts`
+    log.error(msg, lastError)
+    throw new Error(msg, { cause: lastError ?? undefined })
   }
 
   /*
@@ -328,23 +359,53 @@ class ConnectionService {
    *
    * This does not specify a token, unlike the @hawtio/react
    * connect-service. Instead it leaves that up to the interceptor
-   * in fetch-patch-service.
+   * in scoped-fetch.
+   *
+   * Implements retry logic with exponential backoff for transient failures
    */
-  private async testConnection(connection: Connection): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      const path = connectService.getJolokiaUrl(connection)
-      fetch(path, {
-        method: 'post',
-        body: JSON.stringify({ type: 'version' }),
-      })
-        .then(async (response: Response) => {
-          return this.handleResponse(response, path, resolve, reject)
+  private async testConnection(connection: Connection, maxRetries = 3, initialDelay = 1000): Promise<string> {
+    const path = connectService.getJolokiaUrl(connection)
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(path, {
+          method: 'post',
+          body: JSON.stringify({ type: 'version' }),
+          credentials: 'include', // Ensure cookies/CSRF tokens are sent
         })
-        .catch(error => {
-          const err = new HTTPError(error.status, error.error)
-          reject(err)
+
+        // Use promise wrapper for handleResponse
+        return await new Promise<string>((resolve, reject) => {
+          this.handleResponse(response, path, resolve, reject)
         })
-    })
+      } catch (error) {
+        lastError = error as Error
+
+        // Check if it's an HTTPError with a status code
+        if (error instanceof HTTPError) {
+          // Don't retry on 4xx errors except 401/403 (might be CSRF token issues)
+          if (error.statusCode >= 400 && error.statusCode < 500) {
+            if (error.statusCode !== 401 && error.statusCode !== 403) {
+              log.debug(`Non-retryable error ${error.statusCode} for ${path}`)
+              throw error
+            }
+          }
+        }
+
+        // If this isn't the last attempt, wait before retrying
+        if (attempt < maxRetries - 1) {
+          const delay = initialDelay * Math.pow(2, attempt)
+          log.debug(`Retry attempt ${attempt + 1}/${maxRetries} for ${path} after ${delay}ms`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+
+    // All retries exhausted
+    const msg = `Failed to test connection after ${maxRetries} attempts`
+    log.error(msg, lastError)
+    throw new Error(msg, { cause: lastError ?? undefined })
   }
 
   async connect(pod: K8sPod): Promise<Error | null> {
@@ -363,6 +424,7 @@ class ConnectionService {
     }
 
     try {
+      // testConnection now has built-in retry logic with exponential backoff
       const result = await this.testConnection(connection)
       if (!result) {
         const msg = `There was a problem connecting to the jolokia service ${connectionId}`
@@ -375,10 +437,17 @@ class ConnectionService {
       connectService.setCurrentConnection(connection)
       return null
     } catch (error) {
-      const msg = `A problem occurred while trying to connect to the jolokia service ${connectionId}`
-      log.error(msg)
-      log.error(error)
-      eventService.notify({ type: 'danger', message: msg })
+      // Error after all retries exhausted
+      const msg = `Failed to connect to jolokia service ${connectionId} after multiple attempts`
+      log.error(msg, error)
+
+      // Provide user-friendly error message
+      const userMsg =
+        error instanceof HTTPError
+          ? `Connection failed: ${error.message}`
+          : 'Connection failed. Please try refreshing the page.'
+
+      eventService.notify({ type: 'danger', message: userMsg })
       return new Error(msg, { cause: error as Error })
     }
   }
