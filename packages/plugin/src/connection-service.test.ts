@@ -1,3 +1,4 @@
+import fetchMock from 'jest-fetch-mock'
 import { connectionService } from './connection-service'
 import { K8sPod } from './types'
 import { Connection, connectService, eventService } from '@hawtio/react'
@@ -222,7 +223,7 @@ describe('ConnectionService', () => {
     }
 
     beforeEach(() => {
-      mockedConnectService.getJolokiaUrl.mockReturnValue(mockConnection.jolokiaUrl)
+      mockedConnectService.getJolokiaUrl.mockReturnValue(mockConnection.jolokiaUrl as string)
     })
 
     it('should succeed with valid connection', async () => {

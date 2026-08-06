@@ -1,3 +1,4 @@
+import fetchMock from 'jest-fetch-mock'
 import { scopedFetch, basePath } from './scoped-fetch'
 import { getCSRFToken } from './utils/https'
 

@@ -20,8 +20,8 @@
     "isolatedModules": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"],
-  "exclude": ["node_modules"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.spec.ts", "src/setupTests.ts"],
   "ts-node": {
     "files": true,
     "transpileOnly": true,
