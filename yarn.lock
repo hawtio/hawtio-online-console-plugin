@@ -2464,7 +2464,7 @@ __metadata:
     interpolate-html-plugin: "npm:^4.0.0"
     jest: "npm:^29.7.0"
     jest-environment-jsdom: "npm:^29.7.0"
-    jest-fetch-mock: "npm:^3.0.3"
+    jest-fetch-mock: "npm:^4.2.0"
     jsonpath: "npm:^1.1.1"
     kubernetes-types: "npm:^1.30.0"
     mocha-junit-reporter: "npm:^2.2.0"
@@ -2528,7 +2528,7 @@ __metadata:
     https: "npm:^1.0.0"
     jest: "npm:^30.4.2"
     jest-extended: "npm:^7.0.0"
-    jest-fetch-mock: "npm:^3.0.3"
+    jest-fetch-mock: "npm:^4.2.0"
     jolokia.js: "npm:^2.5.0"
     jwt-decode: "npm:^4.0.0"
     lru-cache: "npm:^11.5.1"
@@ -8238,7 +8238,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:^3.0.4":
+"cross-fetch@npm:^3.1.8":
   version: 3.2.0
   resolution: "cross-fetch@npm:3.2.0"
   dependencies:
@@ -12825,13 +12825,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-fetch-mock@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "jest-fetch-mock@npm:3.0.3"
+"jest-fetch-mock@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "jest-fetch-mock@npm:4.2.0"
   dependencies:
-    cross-fetch: "npm:^3.0.4"
-    promise-polyfill: "npm:^8.1.3"
-  checksum: 10/c119a87fc8b084b94089f44fd83433fc7b8b0f180507b2ffa3b50eb4213a01f9917fab564b303f0d588dee30506942bb0bd611828f368bdd75cb163cf5d967c0
+    cross-fetch: "npm:^3.1.8"
+  checksum: 10/a59d8d2af35ae9045a1554160579ab9126823b0db5072366a010fa1de04d9c77e0763e021721c260c63bebc6d231c07f9315832c9d85170f30bbfdc18c922690
   languageName: node
   linkType: hard
 
@@ -16347,13 +16346,6 @@ __metadata:
   version: 1.0.1
   resolution: "promise-inflight@npm:1.0.1"
   checksum: 10/1560d413ea20c5a74f3631d39ba8cbd1972b9228072a755d01e1f5ca5110382d9af76a1582d889445adc6e75bb5ac4886b56dc4b6eae51b30145d7bb1ac7505b
-  languageName: node
-  linkType: hard
-
-"promise-polyfill@npm:^8.1.3":
-  version: 8.3.0
-  resolution: "promise-polyfill@npm:8.3.0"
-  checksum: 10/f735f59e464174f720fec9c41c5029ec1014e62e05d61e39d8d2290a0bc4dd7c36a0782d3202f1775d09d0b33a47fef289db38c437534769b187da22e03bfa23
   languageName: node
   linkType: hard
 
