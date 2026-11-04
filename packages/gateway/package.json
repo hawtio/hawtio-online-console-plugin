@@ -59,7 +59,7 @@
     "copy-webpack-plugin": "^14.0.0",
     "jest": "^30.4.2",
     "jest-extended": "^7.0.0",
-    "jest-fetch-mock": "^3.0.3",
+    "jest-fetch-mock": "^4.2.0",
     "source-map-loader": "^5.0.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
