@@ -95,6 +95,6 @@
     "webpack": "^5.100.2"
   },
   "dependencies": {
-    "react-router-dom-v5-compat": "^6.30.3"
+    "react-router-dom-v5-compat": "^6.30.4"
   }
 }
