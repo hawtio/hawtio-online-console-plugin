@@ -198,5 +198,5 @@ export const HawtioDiscover: React.FunctionComponent<HawtioDiscoverProps> = () =
 }
 
 // OpenShift Console plugin API strictly requires default exports for dynamic components
-// eslint-disable-next-line import/no-default-export
+// eslint-disable-next-line import-x/no-default-export
 export default HawtioDiscover

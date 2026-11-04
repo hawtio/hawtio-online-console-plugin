@@ -234,5 +234,5 @@ export const CamelDashboardHawtioTab: React.FunctionComponent<CamelDashboardHawt
 }
 
 // OpenShift Console plugin API strictly requires default exports for dynamic components
-// eslint-disable-next-line import/no-default-export
+// eslint-disable-next-line import-x/no-default-export
 export default CamelDashboardHawtioTab
