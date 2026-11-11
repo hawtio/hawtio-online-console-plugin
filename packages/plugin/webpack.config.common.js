@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const InterpolateHtmlPlugin = require('interpolate-html-plugin')
 const { ConsoleRemotePlugin } = require('@openshift-console/dynamic-plugin-sdk-webpack')
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const path = require('path')
 const { dependencies } = require('./package.json')
 
@@ -10,6 +11,13 @@ const { dependencies } = require('./package.json')
 const thmarkCjsPath = require.resolve('@thumbmarkjs/thumbmarkjs')
 const thmarkDistDir = path.dirname(thmarkCjsPath)
 const thmarkEsmPath = path.join(thmarkDistDir, 'thumbmark.esm.js')
+
+// Correctly resolve monaco 0.52+ dependency
+const monacoJsPath = require.resolve('monaco-editor')
+const monacoDir = path.dirname(monacoJsPath) // resolves to ../monaco-editor/min/vs by default
+const monacoEsmPath = path.dirname(path.join(monacoJsPath, '../..'))
+// const monacoWorkerEsmPath = path.resolve(monacoDir, '../../esm/vs/editor/editor.worker.js')
+console.log('Using ', monacoEsmPath, ' for the esm path of monaco-editor')
 
 const common = (mode, publicPath, env) => {
   // hawtio-online-console-plugin
@@ -128,6 +136,13 @@ const common = (mode, publicPath, env) => {
       new webpack.ProvidePlugin({
         fetch: [path.resolve(__dirname, 'src/scoped-fetch.ts'), 'scopedFetch'],
       }),
+      new MonacoWebpackPlugin({
+        // 'html' is required as workaround for 'xml'
+        // https://github.com/microsoft/monaco-editor/issues/1509
+        languages: ['xml', 'json', 'html'],
+        globalAPI: false,
+        monacoEditorPath: monacoEsmPath,
+      }),
     ],
     output: {
       path: path.resolve(__dirname, 'dist'),
@@ -138,11 +153,23 @@ const common = (mode, publicPath, env) => {
       chunkFilename: mode === 'production' ? '[name]-chunk-[chunkhash].min.js' : '[name]-chunk.js',
     },
     resolve: {
+      // This tells Webpack to look for the "require" and "import" conditions
+      // in the "exports" map of a package.json.
+      conditionNames: ['require', 'import', 'browser'],
+
+      // While often default in modern Webpack, it's good to be explicit
+      // that you want to respect the "exports" field.
+      exportsFields: ['exports'],
+
       alias: {
         // This tells Webpack:
         // Anytime code tries to import '@thumbmarkjs/thumbmarkjs', use this specific
         // file instead of trying to figure it out yourself.
         '@thumbmarkjs/thumbmarkjs': thmarkEsmPath,
+        // // Anytime code tries to import 'monaco-editor', use this specific
+        // // file instead of trying to figure it out yourself.
+        // 'monaco-editor$': monacoEsmPath,
+        // 'monaco-editor-worker$': monacoWorkerEsmPath,
       },
       modules: ['node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx'],
