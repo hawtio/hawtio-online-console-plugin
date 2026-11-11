@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { MenuToggle, MenuToggleElement, Select, SelectList, SelectOption } from '@patternfly/react-core'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router'
 import { ModuleIcon } from '@patternfly/react-icons'
 import { hawtio, usePlugins, Plugin } from '@hawtio/react'
 import { log } from '../globals'
