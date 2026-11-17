@@ -21,7 +21,6 @@ module.exports = (env, argv) => {
   const publicPath = '/hawtio'
 
   return merge(common('development', publicPath, env), {
-    devtool: 'eval-source-map',
     stats: 'errors-warnings',
 
     module: {
@@ -54,9 +53,9 @@ module.exports = (env, argv) => {
       server: {
         type: 'https',
         options: {
-          ca: './tls-certificates/certificate-authority.crt',
-          key: './tls-certificates/server.localhost.key',
-          cert: './tls-certificates/server.localhost.crt',
+          ca: '../../tls-certificates/certificate-authority.crt',
+          key: '../../tls-certificates/server.localhost.key',
+          cert: '../../tls-certificates/server.localhost.crt',
         },
       },
 

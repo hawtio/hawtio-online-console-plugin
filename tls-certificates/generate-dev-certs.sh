@@ -8,6 +8,7 @@ HOST=localhost
 SERVER_KEY="server.${HOST}.key"
 SERVER_CSR="server.${HOST}.csr"
 SERVER_CRT="server.${HOST}.crt"
+SERVER_BUNDLE_CRT="server.${HOST}.bundle.crt"
 
 PROXY_CSR_CONF="proxy-csr.conf"
 PROXY_KEY="proxy.${HOST}.key"
@@ -24,8 +25,8 @@ extract_ca ${KUBECLI}
 #
 ##############################################
 
-if [ -f "${SERVER_CRT}" ]; then
-  echo "Server Certificate already created"
+if [ -f "${SERVER_CRT}" ] && [ -f ${SERVER_BUNDLE_CRT} ]; then
+  echo "Server Certificates already created"
 else
   # Create Server Key and CSR
   openssl req \
@@ -58,6 +59,12 @@ else
   else
     # No longer need the CSR
     rm -f "${SERVER_CSR}"
+  fi
+
+  # Create bundle certificate (cert + CA chain)
+  if [ -f "${SERVER_CRT}" ] && [ -f "${CA_CERT}" ]; then
+    cat "${SERVER_CRT}" "${CA_CERT}" > "${SERVER_BUNDLE_CRT}"
+    echo "Server Bundle Certificate created"
   fi
 
 fi
@@ -126,3 +133,8 @@ EOT
   fi
 
 fi
+
+# Ensure all files are readable by console
+chmod 644 *.crt
+chmod 644 *.key
+chmod 644 *.srl

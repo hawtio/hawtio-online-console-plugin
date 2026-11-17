@@ -9,10 +9,8 @@
     "url": "https://github.com/hawtio/hawtio-online-console-plugin.git"
   },
   "scripts": {
+    "prestart": "yarn --cwd ../.. gen:certs",
     "start:plugin": "yarn clean && NODE_ENV=development yarn webpack serve --progress --profile --json=compilation-stats.json --env PLUGIN_NAME=$npm_package_name --env PACKAGE_VERSION=$npm_package_version --config webpack.config.dev.js",
-    "start:console": "yarn bridge-auth && yarn cert-gen && ./scripts/start-console.sh",
-    "cert-gen": "cd tls-certificates && ./generate-dev-certs.sh",
-    "bridge-auth": "cd bridge-auth-https && ./setup-oauth.sh",
     "build": "yarn clean && NODE_ENV=production webpack --env PLUGIN_NAME=$npm_package_name --env PACKAGE_VERSION=$npm_package_version --config webpack.config.prod.js",
     "clean": "rm -rf dist",
     "webpack": "node -r ts-node/register --inspect ../../node_modules/.bin/webpack",

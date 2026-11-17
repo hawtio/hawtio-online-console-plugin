@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# Check prerequisites
+command -v oc >/dev/null 2>&1 || { echo "Error: oc CLI not found"; exit 1; }
+command -v podman >/dev/null 2>&1 || command -v docker >/dev/null 2>&1 || { echo "Error: podman or docker required"; exit 1; }
+
+# Source env variables from
+# defaults from version control
+# override if specified
+set -a
+[ -f env.defaults ] && . env.defaults
+[ -f .env ] && . .env
+set +a
+
 CONSOLE_IMAGE=${CONSOLE_IMAGE:="quay.io/openshift/origin-console:latest"}
 CONSOLE_PORT=${CONSOLE_PORT:=9442}
 CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}

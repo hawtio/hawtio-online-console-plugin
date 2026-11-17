@@ -17,10 +17,10 @@
     "OpenShift"
   ],
   "scripts": {
-    "start": "yarn cert-gen && yarn start:gateway-dev & yarn start:gateway-server",
+    "prestart": "yarn --cwd ../.. gen:certs",
+    "start": "yarn start:gateway-dev & yarn start:gateway-server",
     "start:gateway-dev": "node --env-file .env.development proxy-dev-server.js",
     "start:gateway-server": "tsup --config tsup.config.dev.ts --watch",
-    "cert-gen": "cd tls-certificates && ./generate-dev-certs.sh",
     "build": "webpack --mode production --progress --config webpack.config.prod.js",
     "test": "yarn create-test-certs && jest --detectOpenHandles",
     "test:watch": "yarn create-test-certs && jest --detectOpenHandles --watch",
