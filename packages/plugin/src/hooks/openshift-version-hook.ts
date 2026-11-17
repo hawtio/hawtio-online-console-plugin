@@ -39,6 +39,19 @@ export const useOpenShiftTheme = (): void => {
       }
     }
 
+    // Fallback for dev mode (releaseVersion === ""): feature-detect PF6 directly.
+    // Console's root stylesheets are loaded before dynamic plugins execute, so PF6
+    // design tokens (--pf-t--*) are immediately readable on <html>.
+    const hasPf6Tokens =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--pf-t--global--text--color--regular')
+        .trim() !== ''
+
+    const hasPf6Dom = document.querySelector('[class*="pf-v6-"]') !== null
+    if (hasPf6Tokens || hasPf6Dom) {
+      isPatternFly6 = true
+    }
+
     // eslint-disable-next-line no-console
     console.debug(`Hawtio: is PatternFly6? ${isPatternFly6}`)
 
