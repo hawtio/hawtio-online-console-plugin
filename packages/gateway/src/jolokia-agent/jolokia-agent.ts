@@ -1,6 +1,7 @@
 import yaml from 'yaml'
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express-serve-static-core'
 import fetch, { Response as FetchResponse } from 'node-fetch'
+import { jwtDecode } from 'jwt-decode'
 import { LRUCache } from 'lru-cache'
 import * as fs from 'fs'
 import https from 'https'
@@ -20,6 +21,7 @@ import {
   fromFetchHeaders,
 } from './globals'
 import * as RBAC from './rbac'
+import { ensureDevPodTunnel } from './forward-tunnel'
 
 const DEFAULT_ACL_FILE_PATH = `${__dirname}/ACL.yaml`
 
@@ -122,6 +124,8 @@ const excludeHeaders = [
   'content-security-policy',
   'connection',
   'transfer-encoding',
+  'referer',
+  'origin'
 ]
 
 function response(agentInfo: AgentInfo, res: SimpleResponse) {
@@ -191,6 +195,19 @@ async function rejectResponse(response: FetchResponse): Promise<SimpleResponseEr
   return new SimpleResponseError(new SimpleResponse(response.status, JSON.stringify({ error: body }), new Headers()))
 }
 
+function getSubjectFromJwt(agentInfo: AgentInfo): string | undefined {
+  logger.trace('(jolokia-agent) getSubjectFromJwt ...')
+
+  const authz = agentInfo.request.header('Authorization')
+  if (!authz) {
+    logger.error('Authorization header not found in request')
+    return ''
+  }
+  const token = authz.split(' ')[1]
+  const payload = jwtDecode(token)
+  return payload.sub
+}
+
 async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo): Promise<SimpleResponse> {
   logger.trace('(jolokia-agent) selfLocalSubjectAccessReview ....')
 
@@ -256,7 +273,8 @@ async function selfLocalSubjectAccessReview(verb: string, agentInfo: AgentInfo):
 
     if (gatewayConfig.getProxySSLOptions()) {
       requestInit.agent = new https.Agent({
-        cert: gatewayConfig.getProxySSLOptions()?.certCA,
+        ca: gatewayConfig.getProxySSLOptions()?.certCA,
+        cert: gatewayConfig.getProxySSLOptions()?.proxyCert,
         rejectUnauthorized: false,
         keepAlive: false,
       })
@@ -351,7 +369,6 @@ async function retrievePodIP(agentInfo: AgentInfo) {
 
     const json = await fetchResponse.json()
     const data = isObject(json) ? json : JSON.parse(json as string)
-    agentInfo.ip = data.status.podIP
     return data.status.podIP
   })()
 
@@ -361,6 +378,25 @@ async function retrievePodIP(agentInfo: AgentInfo) {
 
   logger.trace(`(jolokia-agent) Caching Pod IP: ${cacheKey}`)
   podIpCache.set(cacheKey, ipPromise)
+
+  // Assign the ip to agent info
+  agentInfo.ip = await ipPromise
+  logger.trace(`(jolokia-agent) Setting agentInfo.ip to ${agentInfo.ip}`)
+}
+
+async function resolvePodTarget(agentInfo: AgentInfo) {
+  if (!gatewayConfig.isExternal()) {
+    logger.trace('(jolokia-agent) resolvePodTarget: gateway internal retrieving pod ip')
+    await retrievePodIP(agentInfo)
+    logger.trace(`Using IP ${agentInfo.ip}`)
+  } else {
+    logger.trace('(jolokia-agent) resolvePodTarget: gateway external so setting up port forward')
+    // If external then make a port forward tunnel available
+    // for the target pod and connect through localhost
+    const localPort = await ensureDevPodTunnel(agentInfo)
+    agentInfo.ip = '127.0.0.1'
+    agentInfo.port = String(localPort)
+  }
 }
 
 async function callJolokiaAgent(
@@ -398,6 +434,8 @@ async function callJolokiaAgent(
       rejectUnauthorized: false,
       keepAlive: false,
     })
+  } else {
+    logger.trace(`(jolokia-agent) ... using plain http for ${method} request`)
   }
 
   const fetchResponse = await fetch(agentUri, options)
@@ -535,9 +573,7 @@ async function handleRequestWithRole(role: string, agentInfo: AgentInfo): Promis
   logger.trace('(jolokia-agent) handleRequestWithRole ...')
 
   const mbeanRequest = parseRequest(agentInfo)
-  if (!gatewayConfig.isExternal()) {
-    await retrievePodIP(agentInfo)
-  }
+  await resolvePodTarget(agentInfo)
 
   let mbeanListRequired: boolean
   if (Array.isArray(mbeanRequest)) {
@@ -658,9 +694,7 @@ async function proxyJolokiaAgentWithoutRbac(agentInfo: AgentInfo): Promise<Simpl
     throw reject(403, { message: `Subject Access Review Result: { allowed: ${sarResponse.body} }` })
   }
 
-  if (!gatewayConfig.isExternal()) {
-    await retrievePodIP(agentInfo)
-  }
+  await resolvePodTarget(agentInfo)
   const jolokiaResult = await callJolokiaAgent(agentInfo, agentInfo.request.body)
   return jolokiaResult
 }
